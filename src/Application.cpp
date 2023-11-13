@@ -39,6 +39,8 @@ int main(void)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
+    //code for adding vertex buffer to memory
+
     
 
     /* Loop until the user closes the window */
