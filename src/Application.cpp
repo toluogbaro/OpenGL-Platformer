@@ -6,21 +6,12 @@
 #include <string>
 #include <sstream>
 
-static void GLClearError()
-{
-    while (glGetError() != GL_NO_ERROR)
-    {
+#include "renderer.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "VertexArray.h"
 
-    }
-}
 
-static void GLCheckError()
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL Error]" << error << std::endl;
-    }
-}
 
 struct ShaderProgramSource
 {
@@ -156,94 +147,91 @@ int main(void)
         std::cout << "not glew ok" << std::endl;
 
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
-
-    float vertexList[] = { 
-        -0.5f, -0.5f, 
-        0.5f, -0.5f, 
-        0.5f, 0.5f, 
-        -0.5f, 0.5f,  
-
-    };
-
-    unsigned int indices[] =
     {
-        0, 1, 2,
+        float vertexList[] = {
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.5f, 0.5f,
+            -0.5f, 0.5f,
 
-        2, 3, 0
-    };
+        };
 
-    unsigned int vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-   
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, (4 * 2) * sizeof(float), vertexList, GL_STATIC_DRAW);
+        unsigned int indices[] =
+        {
+            0, 1, 2,
 
-    // the vertex attrib pointer is binding this buffer with the vertex array object.
-    // its essentially a list of buffers that the pointer is choosing from
-    // instead of connecting multiple buffers to a default array pointer,
-    // all we do is change the array index in the pointer to the object we've created
+            2, 3, 0
+        };
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+        VertexArray va;
 
-    unsigned int ibo; //index buffer object
-    glGenBuffers(1, &ibo); //generate index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); //Give buffer data
+        VertexBuffer vb(vertexList, (2 * 4) * sizeof(float));
 
-    ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+        VertexBufferLayout layout;
 
-    unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
+        layout.Push<float>(2);
+        va.AddBuffer(vb, layout);
 
-    int location = glGetUniformLocation(shader, "u_Colour");
+        IndexBuffer ib(indices, 6);
 
-    _ASSERT(location != -1);
+        //unsigned int ibo; //index buffer object
+        //glGenBuffers(1, &ibo); //generate index buffer
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        //glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); //Give buffer data
 
-    glBindVertexArray(0);
-    glUseProgram(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 
-    //vertex arrays are a way to bind buffers with a certain specification
-    //the process is binding vertex buffer -> using an attrib array to specify the attributes of the vertex -> bind index buffer
-    //Vertex Arrays can be used to differentiate different attributes in the same binding -> modularity?
+        unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 
-    /* Loop until the user closes the window */
+        int location = glGetUniformLocation(shader, "u_Colour");
 
-    float r = 0.0f;
-    float increment = 0.05f;
+        _ASSERT(location != -1);
 
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+        glBindVertexArray(0);
+        glUseProgram(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        glUseProgram(shader);
-        glUniform4f(location, r, 0.6f, 0.8f, 1.0f);
+        //vertex arrays are a way to bind buffers with a certain specification
+        //the process is binding vertex buffer -> using an attrib array to specify the attributes of the vertex -> bind index buffer
+        //Vertex Arrays can be used to differentiate different attributes in the same binding -> modularity?
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); //bind index buffer
+        /* Loop until the user closes the window */
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        float r = 0.0f;
+        float increment = 0.05f;
 
-        if (r >= 1.0f)
-            increment = -0.05f;
-        else if (r <= 0.0f)
-            increment = 0.05f;
+        while (!glfwWindowShouldClose(window))
+        {
+            /* Render here */
+            glClear(GL_COLOR_BUFFER_BIT);
 
-        r += increment;
-            
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+            glUseProgram(shader);
+            glUniform4f(location, r, 0.6f, 0.8f, 1.0f);
 
-        /* Poll for and process events */
-        glfwPollEvents();
+            va.Bind(); //bind vertex array
+            ib.Bind(); //bind index buffer
+
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+            if (r >= 1.0f)
+                increment = -0.05f;
+            else if (r <= 0.0f)
+                increment = 0.05f;
+
+            r += increment;
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
+
+            /* Poll for and process events */
+            glfwPollEvents();
+        }
+        glDeleteProgram(shader);
+
     }
 
-    glDeleteProgram(shader);
+   
 
     glfwTerminate();
     return 0;
