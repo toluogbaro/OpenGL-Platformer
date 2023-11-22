@@ -135,8 +135,12 @@ int main(void)
     if (!glfwInit())
         return -1;
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "MultiMax", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "MultiMax", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -150,6 +154,8 @@ int main(void)
 
     if (glewInit() != GLEW_OK)
         std::cout << "not glew ok" << std::endl;
+
+    std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
 
     float vertexList[] = { 
         -0.5f, -0.5f, 
@@ -166,42 +172,69 @@ int main(void)
         2, 3, 0
     };
 
+    unsigned int vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+   
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glBufferData(GL_ARRAY_BUFFER, (4 * 2) * sizeof(float), vertexList, GL_STATIC_DRAW);
 
+    // the vertex attrib pointer is binding this buffer with the vertex array object.
+    // its essentially a list of buffers that the pointer is choosing from
+    // instead of connecting multiple buffers to a default array pointer,
+    // all we do is change the array index in the pointer to the object we've created
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
-
     unsigned int ibo; //index buffer object
-    (glGenBuffers(1, &ibo)); //generate index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); //bind index buffer
+    glGenBuffers(1, &ibo); //generate index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); //Give buffer data
 
     ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 
-    glUseProgram(shader);
-
     int location = glGetUniformLocation(shader, "u_Colour");
 
     _ASSERT(location != -1);
 
-    glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    //vertex arrays are a way to bind buffers with a certain specification
+    //the process is binding vertex buffer -> using an attrib array to specify the attributes of the vertex -> bind index buffer
+    //Vertex Arrays can be used to differentiate different attributes in the same binding -> modularity?
 
     /* Loop until the user closes the window */
+
+    float r = 0.0f;
+    float increment = 0.05f;
+
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUniform4f(location, 0.2f, 0.6f, 0.8f, 1.0f);
+        glUseProgram(shader);
+        glUniform4f(location, r, 0.6f, 0.8f, 1.0f);
+
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); //bind index buffer
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+        if (r >= 1.0f)
+            increment = -0.05f;
+        else if (r <= 0.0f)
+            increment = 0.05f;
+
+        r += increment;
             
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
