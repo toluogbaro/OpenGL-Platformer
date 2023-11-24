@@ -11,6 +11,7 @@ class Renderer
 	private:
 
 	public:
+		Renderer();
 
 		void Clear();
 

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <unordered_map>
 
 struct ShaderProgramSource
 {
@@ -20,7 +21,7 @@ class Shader
 
 		std::string m_Filepath;
 		unsigned int m_RendererID;
-
+		std::unordered_map<std::string, int> m_UniformLocationCache;
 		
 
 	private:
@@ -41,6 +42,8 @@ class Shader
 		void Bind() const;
 		void Unbind() const;
 
+		void SetUniform1f(const std::string& name, float value);
+		void SetUniform1i(const std::string& name, int value);
 		void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
 
 		

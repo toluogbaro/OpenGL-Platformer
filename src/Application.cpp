@@ -11,6 +11,7 @@
 #include "VertexBuffer.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Texture.h"
 
 
 
@@ -73,17 +74,18 @@ int main(void)
 
         IndexBuffer ib(indices, 6);
 
-        //unsigned int ibo; //index buffer object
-        //glGenBuffers(1, &ibo); //generate index buffer
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        //glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); //Give buffer data
-
-
         Shader shader("res/shaders/Basic.shader");
+
+        Texture texture("res/textures/ToluChill.png");
+        texture.Bind();
+
+        shader.SetUniform1i("u_Texture", 0);
 
         shader.Bind();
 
         shader.SetUniform4f("u_Colour", 0.8f, 0.6f, 0.8f, 1.0f);
+
+        shader.Bind();
 
         va.Unbind();
         vb.Unbind();

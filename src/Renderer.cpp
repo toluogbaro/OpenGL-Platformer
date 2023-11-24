@@ -2,6 +2,10 @@
 #include <iostream>
 
 
+Renderer::Renderer()
+{
+
+}
 
 void Renderer::DrawObject(VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
 {
