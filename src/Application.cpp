@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-#include "renderer.h"
+#include "Renderer.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
 #include "VertexArray.h"
@@ -60,6 +60,8 @@ int main(void)
             2, 3, 0
         };
 
+        Renderer renderer;
+
         VertexArray va;
 
         VertexBuffer vb(vertexList, (2 * 4) * sizeof(float));
@@ -81,7 +83,7 @@ int main(void)
 
         shader.Bind();
 
-        shader.SetUniform4f("u_Color", 0.8f, 0.6f, 0.8f, 1.0f);
+        shader.SetUniform4f("u_Colour", 0.8f, 0.6f, 0.8f, 1.0f);
 
         va.Unbind();
         vb.Unbind();
@@ -89,10 +91,6 @@ int main(void)
         shader.Unbind();
 
 
-        glBindVertexArray(0);
-        glUseProgram(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         //vertex arrays are a way to bind buffers with a certain specification
         //the process is binding vertex buffer -> using an attrib array to specify the attributes of the vertex -> bind index buffer
@@ -105,17 +103,14 @@ int main(void)
 
         while (!glfwWindowShouldClose(window))
         {
-            /* Render here */
-            glClear(GL_COLOR_BUFFER_BIT);
+            
+            renderer.Clear();
 
+            //need to take in material here, not shader
             shader.Bind();
             shader.SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
-
-            va.Bind(); //bind vertex array
-            ib.Bind(); //bind index buffer
-
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-
+            
+            renderer.DrawObject(va, ib, shader);
 
             if (r >= 1.0f)
                 increment = -0.05f;
