@@ -47,10 +47,10 @@ int main(void)
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
     {
         float vertexList[] = {
-            -0.5f, -0.5f,
-            0.5f, -0.5f,
-            0.5f, 0.5f,
-            -0.5f, 0.5f,
+            -0.5f, -0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 0.0f, 1.0f,
 
         };
 
@@ -65,11 +65,15 @@ int main(void)
 
         VertexArray va;
 
-        VertexBuffer vb(vertexList, (2 * 4) * sizeof(float));
-
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
         VertexBufferLayout layout;
-
         layout.Push<float>(2);
+        layout.Push<float>(2);
+
+        VertexBuffer vb(vertexList, (4 * 4) * sizeof(float));
+
         va.AddBuffer(vb, layout);
 
         IndexBuffer ib(indices, 6);

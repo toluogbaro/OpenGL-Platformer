@@ -34,7 +34,7 @@ After step 2, Ill start with the network programming, just to set everything up 
 
 Then Ill do step 3
 
-From January 2024, I'll focus more on the finishing touches until its submission time
+From Beginning of January 2024, I'll focus on Step 4 and the finishing touches until its submission time
 
 For my stretch goals, I want to add SDL audio and make a couple custom game tunes with Bosca Ceoil if I have the time
 
