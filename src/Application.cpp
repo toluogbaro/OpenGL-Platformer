@@ -13,6 +13,9 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 
 
 
@@ -67,6 +70,8 @@ int main(void)
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
         
         VertexBufferLayout layout;
         layout.Push<float>(2);
@@ -88,6 +93,10 @@ int main(void)
         shader.Bind();
 
         shader.SetUniform4f("u_Colour", 0.8f, 0.6f, 0.8f, 1.0f);
+
+        shader.Bind();
+
+        shader.SetUnifromMat4("u_MVP", proj);
 
         shader.Bind();
 
