@@ -32,7 +32,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1920, 1080, "MultiMax", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "Doodle Jump Remake", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -105,7 +105,7 @@ int main(void)
         ib.Unbind();
         shader.Unbind();
 
-
+        
 
         //vertex arrays are a way to bind buffers with a certain specification
         //the process is binding vertex buffer -> using an attrib array to specify the attributes of the vertex -> bind index buffer
@@ -122,8 +122,9 @@ int main(void)
             renderer.Clear();
 
             //need to take in material here, not shader
-            shader.Bind();
             shader.SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
+            shader.Bind();
+            
             
             renderer.DrawObject(va, ib, shader);
 
