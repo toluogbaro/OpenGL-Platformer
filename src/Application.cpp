@@ -16,6 +16,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
+
+
 
 
 
@@ -116,10 +120,25 @@ int main(void)
         float r = 0.0f;
         float increment = 0.05f;
 
+        bool show_demo_window = true;
+        bool show_another_window = false;
+        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+
+
+        ImGui::CreateContext();
+        ImGui_ImplGlfwGL3_Init(window, GL_TRUE);
+        ImGui::StyleColorsDark();
+
+        ImGuiIO& io = ImGui::GetIO();
+
+
         while (!glfwWindowShouldClose(window))
         {
             
             renderer.Clear();
+
+            ImGui_ImplGlfwGL3_NewFrame();
 
             //need to take in material here, not shader
             shader.SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
@@ -135,6 +154,22 @@ int main(void)
 
             r += increment;
 
+            {
+                static float f = 0.0f;
+                static int counter = 0;
+
+                ImGui::Begin("Hello, world!");                         
+
+                ImGui::SliderFloat("float", &f, 0.0f, 1.0f);           
+                
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+                ImGui::End();
+            }
+
+
+            ImGui::Render();
+            ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+            
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
 
@@ -146,7 +181,7 @@ int main(void)
     }
 
    
-
+    ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
     return 0;
 }
