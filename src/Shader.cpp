@@ -124,21 +124,24 @@ void Shader::Unbind() const
 
 int Shader::GetUniformLocation(const std::string& name)
 {
-
+    
     if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
         return m_UniformLocationCache[name];
+    //if uniform location is already in hashmap, return
 
-    int location = glGetUniformLocation(m_RendererID, name.c_str());
+    int location = glGetUniformLocation(m_RendererID, name.c_str()); //gets location using uniform name
 
     if (location == -1)
-        std::cout << "Uniform: " << name << " doesn't exist" << std::endl;
+        std::cout << "Uniform: " << name << " doesn't exist" << std::endl; //error check
 
-    m_UniformLocationCache[name] = location;
+    m_UniformLocationCache[name] = location; //adds location to hashmap
 
     return location;
 
 }
 
+//a uniform is a pocket of data that replaces manually adding them. For instance
+//four floats could be r g b a for a colour in a fragment shader
 
 void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
 {

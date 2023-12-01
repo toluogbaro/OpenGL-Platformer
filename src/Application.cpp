@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <memory>
 
 #include "Renderer.h"
 #include "IndexBuffer.h"
@@ -20,11 +21,9 @@
 #include "imgui/imgui_impl_glfw_gl3.h"
 
 
-
-
-
 int main(void)
 {
+
     GLFWwindow* window;
 
     /* Initialize the library */
@@ -68,7 +67,10 @@ int main(void)
             2, 3, 0
         };
 
-        Renderer renderer;
+
+        //Renderer renderer;
+
+        std::unique_ptr<Renderer> renderer(new Renderer);
 
         VertexArray va;
 
@@ -124,19 +126,19 @@ int main(void)
         bool show_another_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-
-
         ImGui::CreateContext();
         ImGui_ImplGlfwGL3_Init(window, GL_TRUE);
         ImGui::StyleColorsDark();
 
         ImGuiIO& io = ImGui::GetIO();
 
+        bool shouldBlink = false;
+
 
         while (!glfwWindowShouldClose(window))
         {
             
-            renderer.Clear();
+            renderer->Clear();
 
             ImGui_ImplGlfwGL3_NewFrame();
 
@@ -145,23 +147,33 @@ int main(void)
             shader.Bind();
             
             
-            renderer.DrawObject(va, ib, shader);
+            renderer->DrawObject(va, ib, shader);
 
-            if (r >= 1.0f)
-                increment = -0.05f;
-            else if (r <= 0.0f)
-                increment = 0.05f;
+            if (shouldBlink)
 
-            r += increment;
+            {
+                if (r >= 1.0f)
+                    increment = -0.05f;
+                else if (r <= 0.0f)
+                    increment = 0.05f;
+
+                r += increment;
+            }
+
 
             {
                 static float f = 0.0f;
                 static int counter = 0;
 
+                ImVec2 standardButtonSize{ 200.0f, .0f };
+
                 ImGui::Begin("Hello, world!");                         
 
-                ImGui::SliderFloat("float", &f, 0.0f, 1.0f);           
-                
+                ImGui::SliderFloat("float", &f, 0.0f, 1.0f); 
+
+                if (ImGui::Button("Activate Blink", standardButtonSize))
+                    shouldBlink = true;
+
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
                 ImGui::End();
             }
@@ -169,7 +181,7 @@ int main(void)
 
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-            
+
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
 

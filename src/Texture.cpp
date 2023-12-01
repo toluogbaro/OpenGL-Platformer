@@ -8,15 +8,17 @@ Texture::Texture(const std::string& path)
 	stbi_set_flip_vertically_on_load(1);
 	m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_Bits, 4); //4 is because of rgba
 	
-	glGenTextures(1, &m_RendererID);
-	glBindTexture(GL_TEXTURE_2D, m_RendererID);
+	glGenTextures(1, &m_RendererID); // generate texture
+	glBindTexture(GL_TEXTURE_2D, m_RendererID); // bind texture
 
-	//need to specify these four or will get a black texture
+	//-----need to specify these four or will get a black texture-----
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // gets x 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);// gets y
+
+	//-----need to specify these four or will get a black texture-----
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer);
 	glBindTexture(GL_TEXTURE_2D, 0);

@@ -13,6 +13,7 @@ class VertexArray
 		VertexArray();
 		~VertexArray();
 
+		//Ampersand is used to modify the actual variable instead of copy
 		void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
 
 		void Bind() const;

@@ -4,7 +4,7 @@
 IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count)
     : m_Count(count)
 {
-    _ASSERT(sizeof(unsigned int) == sizeof(GLuint));
+    _ASSERT(sizeof(unsigned int) == sizeof(GLuint)); //make sure size of unsigned int isnt -1
 
     glGenBuffers(1, &m_RendererID); //generate index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
