@@ -205,7 +205,7 @@ int main(void)
             float deltaTime = timeSinceStart - oldTimeSinceStart;
             oldTimeSinceStart = timeSinceStart;
 
-            static float f = 0.0f;
+            static float blinkSpeed = 0.0f;
 
             if (shouldBlink)
 
@@ -217,7 +217,7 @@ int main(void)
                 else if (r <= 0.0f)
                     increment = 0.05f;
 
-                r += increment * f * deltaTime;
+                r += increment * blinkSpeed * deltaTime;
             }
 
 
@@ -229,7 +229,7 @@ int main(void)
 
                 ImGui::Begin("Hello, world!");                         
 
-                ImGui::SliderFloat("float", &f, 0.0f, 20.0f); 
+                ImGui::SliderFloat("float", &blinkSpeed, 0.0f, 20.0f); 
 
                 if (ImGui::Button("Activate Blink", standardButtonSize))
                     shouldBlink = true;
