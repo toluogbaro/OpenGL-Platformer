@@ -13,6 +13,7 @@
 #include "VertexArray.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "matrix/Camera.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -21,6 +22,91 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 
+float deltaTime;
+float cameraSpeed = 10.0f;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float lastMouseX;
+float lastMouseY;
+float yaw = 90.0f;
+float pitch = 89.0f;
+float fov = 45.0f;
+float mouseSensitivity = 0.1f;
+
+bool firstMouse = true;
+
+
+void ProcessInput(GLFWwindow* currentWindow)
+{
+    
+
+    if (glfwGetKey(currentWindow, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraFront * cameraSpeed * deltaTime;
+
+    if (glfwGetKey(currentWindow, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraFront * cameraSpeed * deltaTime;
+
+    if (glfwGetKey(currentWindow, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::cross(cameraFront, cameraUp) * cameraSpeed * deltaTime;
+
+    if (glfwGetKey(currentWindow, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::cross(cameraFront, cameraUp) * cameraSpeed * deltaTime;
+}
+
+void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
+{
+
+    if (firstMouse)
+    {
+        lastMouseX = xPos;
+        lastMouseY = yPos;
+        firstMouse = false;
+    }
+
+
+    float xOffset = xPos - lastMouseX;
+    float yOffset = lastMouseY - yPos;
+
+    lastMouseX = xPos;
+    lastMouseY = yPos;
+
+    xOffset *= mouseSensitivity;
+    yOffset *= mouseSensitivity;
+
+    yaw += xOffset;
+    pitch += yOffset;
+
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+
+
+    glm::vec3 direction;
+
+    direction.x = cos(glm::radians(yaw) * cos(glm::radians(pitch)));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+
+
+}
+
+void scroll_callback(GLFWwindow* currentWindow, double xOffset, double yOffset)
+{
+    fov -= (float)yOffset;
+
+    if (fov < 1.0f)
+        fov = 1.0f;
+
+    if (fov > 45.0f)
+        fov = 45.0f;
+}
 
 int main(void)
 {
@@ -53,6 +139,8 @@ int main(void)
 
 
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
+
+
     {
         float vertexList[] = {
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -105,8 +193,6 @@ int main(void)
 
             2, 3, 0
         };
-
-
 
         std::unique_ptr<Renderer> renderer(new Renderer);
 
@@ -171,25 +257,50 @@ int main(void)
         ImGuiIO& io = ImGui::GetIO();
 
         bool shouldBlink = false;
-
-        
+   
         float oldTimeSinceStart = 0.0f;
 
         while (!glfwWindowShouldClose(window))
         {
             
+            float timeSinceStart = static_cast<float>(glfwGetTime());
+            deltaTime = timeSinceStart - oldTimeSinceStart;
+            oldTimeSinceStart = timeSinceStart;
+            
             renderer->Clear();
 
             ImGui_ImplGlfwGL3_NewFrame();
 
+            ProcessInput(window);
+
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
+#pragma region ViewCalculationsw
+
+            glfwSetCursorPosCallback(window, mouse_callback);
+            glfwSetScrollCallback(window, scroll_callback);
+
+            if (!glfwGetKey(window, GLFW_KEY_ESCAPE))
+            {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                
+            }
+            else
+            {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                
+            }
+
+          
             glm::mat4 view = glm::mat4(1.0f);
-            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+            view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+
+#pragma endregion ViewCalculations
 
             glm::mat4 projection = glm::mat4(1.0f);
-            projection = glm::perspective(glm::radians(45.0f), 1920.0f / 1080.0f, 0.1f, 100.0f);
+            projection = glm::perspective(glm::radians(fov), 1920.0f / 1080.0f, 0.1f, 100.0f);
 
            
             shader.SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
@@ -201,11 +312,9 @@ int main(void)
 
             renderer->DrawObject(va, ib, shader);
 
-            float timeSinceStart = static_cast<float>(glfwGetTime());
-            float deltaTime = timeSinceStart - oldTimeSinceStart;
-            oldTimeSinceStart = timeSinceStart;
+          
 
-            static float blinkSpeed = 0.0f;
+            static float blinkSpeed = 20.0f;
 
             if (shouldBlink)
 
@@ -229,7 +338,11 @@ int main(void)
 
                 ImGui::Begin("Hello, world!");                         
 
-                ImGui::SliderFloat("float", &blinkSpeed, 0.0f, 20.0f); 
+                ImGui::SliderFloat("Blink Speed", &blinkSpeed, 20.0f, 100.0f); 
+
+                ImGui::SliderFloat("Camera Speed", &cameraSpeed, 5.0f, 50.0f);
+
+                ImGui::SliderFloat("Mouse Speed", &mouseSensitivity, 0.1f, 1.0f);
 
                 if (ImGui::Button("Activate Blink", standardButtonSize))
                     shouldBlink = true;
@@ -242,11 +355,16 @@ int main(void)
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
+           
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
 
             /* Poll for and process events */
             glfwPollEvents();
+
+            
+
+            
         }
         shader.Unbind();
 
