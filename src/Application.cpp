@@ -16,6 +16,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
@@ -50,13 +51,51 @@ int main(void)
     if (glewInit() != GLEW_OK)
         std::cout << "not glew ok" << std::endl;
 
+
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
     {
         float vertexList[] = {
-            -0.5f, -0.5f, 0.0f, 0.0f,
-            0.5f, -0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, 1.0f, 1.0f,
-            -0.5f, 0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 
         };
 
@@ -68,7 +107,6 @@ int main(void)
         };
 
 
-        //Renderer renderer;
 
         std::unique_ptr<Renderer> renderer(new Renderer);
 
@@ -77,13 +115,13 @@ int main(void)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
-        
+        glEnable(GL_DEPTH_TEST);
+
         VertexBufferLayout layout;
-        layout.Push<float>(2);
+        layout.Push<float>(3);
         layout.Push<float>(2);
 
-        VertexBuffer vb(vertexList, (4 * 4) * sizeof(float));
+        VertexBuffer vb(sizeof(vertexList),  vertexList);
 
         va.AddBuffer(vb, layout);
 
@@ -102,14 +140,14 @@ int main(void)
 
         shader.Bind();
 
-        shader.SetUnifromMat4("u_MVP", proj);
+        //shader.SetUnifromMat4("u_MVP", proj);
 
         shader.Bind();
 
-        va.Unbind();
-        vb.Unbind();
-        ib.Unbind();
-        shader.Unbind();
+        //va.Unbind();
+        //vb.Unbind();
+        //ib.Unbind();
+        //shader.Unbind();
 
         
 
@@ -134,6 +172,8 @@ int main(void)
 
         bool shouldBlink = false;
 
+        
+        float oldTimeSinceStart = 0.0f;
 
         while (!glfwWindowShouldClose(window))
         {
@@ -142,34 +182,54 @@ int main(void)
 
             ImGui_ImplGlfwGL3_NewFrame();
 
-            //need to take in material here, not shader
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+            glm::mat4 view = glm::mat4(1.0f);
+            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+            glm::mat4 projection = glm::mat4(1.0f);
+            projection = glm::perspective(glm::radians(45.0f), 1920.0f / 1080.0f, 0.1f, 100.0f);
+
+           
             shader.SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
+            shader.SetUnifromMat4("model", model);
+            shader.SetUnifromMat4("view", view);
+            shader.SetUnifromMat4("projection", projection);
             shader.Bind();
-            
-            
+
+
             renderer->DrawObject(va, ib, shader);
+
+            float timeSinceStart = static_cast<float>(glfwGetTime());
+            float deltaTime = timeSinceStart - oldTimeSinceStart;
+            oldTimeSinceStart = timeSinceStart;
+
+            static float f = 0.0f;
 
             if (shouldBlink)
 
             {
+               
+
                 if (r >= 1.0f)
                     increment = -0.05f;
                 else if (r <= 0.0f)
                     increment = 0.05f;
 
-                r += increment;
+                r += increment * f * deltaTime;
             }
 
 
             {
-                static float f = 0.0f;
+                
                 static int counter = 0;
 
                 ImVec2 standardButtonSize{ 200.0f, .0f };
 
                 ImGui::Begin("Hello, world!");                         
 
-                ImGui::SliderFloat("float", &f, 0.0f, 1.0f); 
+                ImGui::SliderFloat("float", &f, 0.0f, 20.0f); 
 
                 if (ImGui::Button("Activate Blink", standardButtonSize))
                     shouldBlink = true;

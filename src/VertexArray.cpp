@@ -41,7 +41,7 @@ void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& la
 	{
 		const auto& element = elements[i]; // element object
 		glEnableVertexAttribArray(i);
-		glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)offset);
+		glVertexAttribPointer(i, element.count, element.type, element.normalized, 5 * sizeof(float), (const void*)offset);
 
 		//i = the index of the vertex buffer array
 		//count is how many parts there are in each element, for a float of vertex positions, thats 2. x and y
