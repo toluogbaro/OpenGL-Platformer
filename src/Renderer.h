@@ -4,11 +4,13 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "matrix/Mesh.h"
 
 
 class Renderer
 {
 	private:
+		Mesh& m_CurrentMesh;
 
 	public:
 		Renderer();

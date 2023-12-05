@@ -29,10 +29,10 @@ glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-float lastMouseX;
-float lastMouseY;
-float yaw = 90.0f;
-float pitch = 89.0f;
+float lastMouseX = 0.0f;
+float lastMouseY = 0.0f;
+float yaw = -90.0f;
+float pitch = -89.0f;
 float fov = 45.0f;
 float mouseSensitivity = 0.1f;
 
@@ -64,20 +64,30 @@ void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos)
         lastMouseX = xPos;
         lastMouseY = yPos;
         firstMouse = false;
+        //added so that the mouse doesn't fly off when it first detects input
     }
 
 
     float xOffset = xPos - lastMouseX;
     float yOffset = lastMouseY - yPos;
 
-    lastMouseX = xPos;
+    //current mouse input vs the last mouse input
+
+    lastMouseX = xPos; 
     lastMouseY = yPos;
+
+    //setting the last mouse positions to the current ones
 
     xOffset *= mouseSensitivity;
     yOffset *= mouseSensitivity;
 
-    yaw += xOffset;
-    pitch += yOffset;
+    //multiplying offset by a sensitivity value, for ex. 0.5f, dampens it
+
+    yaw += xOffset; // yaw is the euler angle for the x axis
+    pitch += yOffset; // pitch is the euler angle for the y axis
+
+    // adding the current mouse position - the last mouse position gives you where the mouse is currently meant
+    // to be in terms of these euler angles
 
     if (pitch > 89.0f)
         pitch = 89.0f;
@@ -85,13 +95,17 @@ void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos)
     if (pitch < -89.0f)
         pitch = -89.0f;
 
+    // clamping the pitch which is the y axis.
+    // We dont want it to be able to go beyond looking at the sky or looking below us
 
-
-    glm::vec3 direction;
+    glm::vec3 direction; //vector 3 for camera direction
 
     direction.x = cos(glm::radians(yaw) * cos(glm::radians(pitch)));
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    //need more understanding on why we're multiplying the sin and cos for each axis
+
     cameraFront = glm::normalize(direction);
 
 
