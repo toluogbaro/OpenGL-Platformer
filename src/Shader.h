@@ -8,20 +8,26 @@
 #include <unordered_map>
 #include "glm/glm.hpp"
 
+//Filepath for the shaders associated with this constructed class
 struct ShaderProgramSource
 {
 	std::string VertexSource;
 	std::string FragmentSource;
+	std::string GeometrySource;
+	std::string TesselationSource;
 };
 
 class Shader
 {
 
-
 	private:
 
+		//current filepath this constructed class is readin
 		std::string m_Filepath;
-		unsigned int m_RendererID;
+
+		unsigned int m_RendererID; 
+
+		//stores shader location to reuse
 		std::unordered_map<std::string, int> m_UniformLocationCache;
 		
 

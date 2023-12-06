@@ -24,107 +24,39 @@
 #include "imgui/imgui_impl_glfw_gl3.h"
 
 float deltaTime;
-float cameraSpeed = 10.0f;
+//float cameraSpeed = 10.0f;
+//
+//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+//
+//float lastMouseX = 0.0f;
+//float lastMouseY = 0.0f;
+//float yaw = -90.0f;
+//float pitch = -89.0f;
+//float fov = 45.0f;
+//float mouseSensitivity = 0.1f;
+//
+//bool firstMouse = true;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-float lastMouseX = 0.0f;
-float lastMouseY = 0.0f;
-float yaw = -90.0f;
-float pitch = -89.0f;
-float fov = 45.0f;
-float mouseSensitivity = 0.1f;
-
-bool firstMouse = true;
-
-
+std::unique_ptr<Camera> freeRoamCamera(new Camera(10.0f, 45.0f));
 
 
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
 {
 
-    if (firstMouse)
-    {
-        lastMouseX = xPos;
-        lastMouseY = yPos;
-        firstMouse = false;
-        //added so that the mouse doesn't fly off when it first detects input
-    }
-
-
-    float xOffset = xPos - lastMouseX;
-    float yOffset = lastMouseY - yPos;
-
-    //current mouse input vs the last mouse input
-
-    lastMouseX = xPos; 
-    lastMouseY = yPos;
-
-    //setting the last mouse positions to the current ones
-
-    xOffset *= mouseSensitivity;
-    yOffset *= mouseSensitivity;
-
-    //multiplying offset by a sensitivity value, for ex. 0.5f, dampens it
-
-    yaw += xOffset; // yaw is the euler angle for the x axis
-    pitch += yOffset; // pitch is the euler angle for the y axis
-
-    // adding the current mouse position - the last mouse position gives you where the mouse is currently meant
-    // to be in terms of these euler angles
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    // clamping the pitch which is the y axis.
-    // We dont want it to be able to go beyond looking at the sky or looking below us
-
-    glm::vec3 direction; //vector 3 for camera direction
-
-    direction.x = cos(glm::radians(yaw) * cos(glm::radians(pitch)));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-    //need more understanding on why we're multiplying the sin and cos for each axis
-
-    cameraFront = glm::normalize(direction);
-
+    freeRoamCamera->ProcessMovement(xPos, yPos);
 
 }
 
 void scroll_callback(GLFWwindow* currentWindow, double xOffset, double yOffset)
 {
-    fov -= (float)yOffset;
-
-    if (fov < 1.0f)
-        fov = 1.0f;
-
-    if (fov > 45.0f)
-        fov = 45.0f;
+    freeRoamCamera->ProcessScroll(yOffset);
 }
 
 void ProcessInput(GLFWwindow* currentWindow)
 {
-
-
-    if (glfwGetKey(currentWindow, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraFront * cameraSpeed * deltaTime;
-
-    if (glfwGetKey(currentWindow, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraFront * cameraSpeed * deltaTime;
-
-    if (glfwGetKey(currentWindow, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::cross(cameraFront, cameraUp) * cameraSpeed * deltaTime;
-
-    if (glfwGetKey(currentWindow, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::cross(cameraFront, cameraUp) * cameraSpeed * deltaTime;
-
-
+    freeRoamCamera->ProcessInput(currentWindow, deltaTime);
 
     glfwSetCursorPosCallback(currentWindow, mouse_callback);
     glfwSetScrollCallback(currentWindow, scroll_callback);
@@ -172,9 +104,9 @@ void ImGuiRun(ImGuiIO& io)
 
         ImGui::SliderFloat("Blink Speed", &blinkSpeed, 20.0f, 100.0f);
 
-        ImGui::SliderFloat("Camera Speed", &cameraSpeed, 5.0f, 50.0f);
+        //ImGui::SliderFloat("Camera Speed", freeRoamCamera->GetCameraSpeed(), 5.0f, 50.0f);
 
-        ImGui::SliderFloat("Mouse Speed", &mouseSensitivity, 0.1f, 1.0f);
+        //ImGui::SliderFloat("Mouse Speed", &mouseSensitivity, 0.1f, 1.0f);
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
@@ -217,6 +149,7 @@ int main(void)
 
 
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
+
 
 
     {
@@ -271,18 +204,19 @@ int main(void)
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
           
-            glm::mat4 view = glm::mat4(1.0f);
-            view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+           /* glm::mat4 view = glm::mat4(1.0f);
+            view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);*/
 
+            freeRoamCamera->ProcessViewMatrix();
 
             glm::mat4 projection = glm::mat4(1.0f);
-            projection = glm::perspective(glm::radians(fov), 1920.0f / 1080.0f, 0.1f, 100.0f);
+            projection = glm::perspective(glm::radians(freeRoamCamera->GetFOV()), 1920.0f / 1080.0f, 0.1f, 100.0f);
 
             ProcessInput(window);
 
             shader->SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
             shader->SetUnifromMat4("model", model);
-            shader->SetUnifromMat4("view", view);
+            shader->SetUnifromMat4("view", freeRoamCamera->ProcessViewMatrix());
             shader->SetUnifromMat4("projection", projection);
             shader->Bind();
 
