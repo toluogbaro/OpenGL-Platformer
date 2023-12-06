@@ -7,17 +7,13 @@ Renderer::Renderer()
 
 }
 
-void Renderer::DrawObject(VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
+void Renderer::DrawObject(VertexArray& va, const IndexBuffer& ib) const
 {
-    //shader.Bind();
-    //shader.SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
 
     va.Bind(); //bind vertex array
     ib.Bind(); //bind index buffer
 
-   // glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr);
-
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr);
 
 }
 
@@ -26,6 +22,14 @@ void Renderer::UnbindAll(VertexArray& va, const IndexBuffer& ib, const Shader& s
     va.Unbind();
     ib.Unbind();
     shader.Unbind();
+}
+
+void Renderer::EnableAll() const
+{
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::Clear()

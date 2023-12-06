@@ -147,7 +147,6 @@
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\matrix\Camera.cpp" />
-    <ClCompile Include="src\matrix\Mesh.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Texture.cpp" />
@@ -164,9 +163,9 @@
     <None Include="res\shaders\Basic.shader" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\vertex_templates\CubeVertexList.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\matrix\Camera.h" />
-    <ClInclude Include="src\matrix\Mesh.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\Texture.h" />
