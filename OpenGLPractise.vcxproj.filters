@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
+    <None Include="res\shaders\Skybox.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -110,7 +111,7 @@
     <ClInclude Include="src\matrix\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\vertex_templates\CubeVertexList.h">
+    <ClInclude Include="src\MeshTemplate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

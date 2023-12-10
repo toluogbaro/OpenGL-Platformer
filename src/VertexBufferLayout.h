@@ -64,6 +64,11 @@ class VertexBufferLayout
             m_Stride += VertexBufferElement::GetSizeofType(GL_UNSIGNED_BYTE) * count;
         }
 
+        void Clear()
+        {
+            m_Elements.clear();
+        }
+
         inline const std::vector<VertexBufferElement> GetElements() const { return m_Elements; } // return current element list of this object
         inline unsigned int GetStride() const { return m_Stride; } // return stride of this object
 

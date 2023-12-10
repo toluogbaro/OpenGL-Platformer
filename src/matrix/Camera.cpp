@@ -9,35 +9,41 @@ Camera::~Camera()
 
 void Camera::ProcessInput(GLFWwindow* currentWindow, float deltaTime)
 {
-    if (glfwGetKey(currentWindow, GLFW_KEY_W) == GLFW_PRESS)
-        m_CameraPosition += m_CameraFront * m_MoveSpeed * deltaTime;
 
-    if (glfwGetKey(currentWindow, GLFW_KEY_S) == GLFW_PRESS)
-        m_CameraPosition -= m_CameraFront * m_MoveSpeed * deltaTime;
+    if (m_CameraMode == Camera_Mode::FREE_ROAM)
+    {
+        if (glfwGetKey(currentWindow, GLFW_KEY_W) == GLFW_PRESS)
+            m_CameraPosition += m_CameraFront * m_MoveSpeed * deltaTime;
 
-    if (glfwGetKey(currentWindow, GLFW_KEY_D) == GLFW_PRESS)
-        m_CameraPosition += glm::cross(m_CameraFront, m_CameraUp) * m_MoveSpeed * deltaTime;
+        if (glfwGetKey(currentWindow, GLFW_KEY_S) == GLFW_PRESS)
+            m_CameraPosition -= m_CameraFront * m_MoveSpeed * deltaTime;
 
-    if (glfwGetKey(currentWindow, GLFW_KEY_A) == GLFW_PRESS)
-        m_CameraPosition -= glm::cross(m_CameraFront, m_CameraUp) * m_MoveSpeed * deltaTime;
+        if (glfwGetKey(currentWindow, GLFW_KEY_D) == GLFW_PRESS)
+            m_CameraPosition += glm::cross(m_CameraFront, m_CameraUp) * m_MoveSpeed * deltaTime;
+
+        if (glfwGetKey(currentWindow, GLFW_KEY_A) == GLFW_PRESS)
+            m_CameraPosition -= glm::cross(m_CameraFront, m_CameraUp) * m_MoveSpeed * deltaTime;
+
+    }
 
 
 }
 
 
-void Camera::ProcessMovement(double xPos, double yPos)
+void Camera::ProcessMovement(GLFWwindow* currentWindow , double xPos, double yPos)
 {
-    if (m_FirstMouseInput)
-    {
-        m_LastMouseX = xPos;
-        m_LastMouseY = yPos;
-        m_FirstMouseInput = false;
-        //added so that the mouse doesn't fly off when it first detects input
-    }
+    //if (m_FirstMouseInput)
+    //{
 
+    //    xPos = m_LastMouseX;
+    //    yPos = m_LastMouseY;
+    //    m_FirstMouseInput = false;
+    //    //added so that the mouse doesn't fly off when it first detects input
+    //}
+    
+    m_XOffset = xPos - m_LastMouseX;
+    m_YOffset = m_LastMouseY - yPos;
 
-    float xOffset = xPos - m_LastMouseX;
-    float yOffset = m_LastMouseY - yPos;
 
     //current mouse input vs the last mouse input
 
@@ -46,27 +52,26 @@ void Camera::ProcessMovement(double xPos, double yPos)
 
     //setting the last mouse positions to the current ones
 
-    xOffset *= m_MouseSensitivity;
-    yOffset *= m_MouseSensitivity;
+    m_XOffset *= m_MouseSensitivity;
+    m_YOffset *= m_MouseSensitivity;
 
     //multiplying offset by a sensitivity value, for ex. 0.5f, dampens it
 
-    m_xAxisEuler += xOffset; 
-    m_yAxisEuler += yOffset; 
+    m_xAxisEuler += m_XOffset;
+    m_yAxisEuler += m_YOffset;
 
     // adding the current mouse position - the last mouse position gives you where the mouse is currently meant
     // to be in terms of these euler angles
 
-    if (m_yAxisEuler > 89.0f)
-        m_yAxisEuler = 89.0f;
-
-    if (m_yAxisEuler < -89.0f)
-        m_yAxisEuler = -89.0f;
+    m_yAxisEuler = glm::clamp(m_yAxisEuler, -89.0f, 89.0f);
 
     // clamping the pitch which is the y axis.
     // We dont want it to be able to go beyond looking at the sky or looking below us
 
     SetCameraDirection();
+
+
+ 
 }
 
 void Camera::ProcessScroll(double scrollDepth)
@@ -87,3 +92,10 @@ glm::mat4 Camera::ProcessViewMatrix()
 
     return view;
 }
+
+void Camera::PlayerCamera(glm::vec3 playerPos)
+{
+    m_CameraPosition = playerPos + m_CameraOffset;
+}
+
+

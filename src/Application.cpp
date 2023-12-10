@@ -14,7 +14,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "matrix/Camera.h"
-#include "vertex_templates/CubeVertexList.h"
+#include "MeshTemplate.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -24,53 +24,45 @@
 #include "imgui/imgui_impl_glfw_gl3.h"
 
 float deltaTime;
-//float cameraSpeed = 10.0f;
-//
-//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-//
-//float lastMouseX = 0.0f;
-//float lastMouseY = 0.0f;
-//float yaw = -90.0f;
-//float pitch = -89.0f;
-//float fov = 45.0f;
-//float mouseSensitivity = 0.1f;
-//
-//bool firstMouse = true;
+float cameraOffsetX;
+float cameraOffsetY;
+float cameraOffsetZ;
 
-std::unique_ptr<Camera> freeRoamCamera(new Camera(10.0f, 45.0f));
+std::unique_ptr<Camera> cameraObj(new Camera(10.0f, 45.0f));
 
 
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
 {
 
-    freeRoamCamera->ProcessMovement(xPos, yPos);
+   if(cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM) cameraObj->ProcessMovement(currentWindow, xPos, yPos);
 
 }
 
 void scroll_callback(GLFWwindow* currentWindow, double xOffset, double yOffset)
 {
-    freeRoamCamera->ProcessScroll(yOffset);
+    cameraObj->ProcessScroll(yOffset);
 }
 
 void ProcessInput(GLFWwindow* currentWindow)
 {
-    freeRoamCamera->ProcessInput(currentWindow, deltaTime);
-
-    glfwSetCursorPosCallback(currentWindow, mouse_callback);
-    glfwSetScrollCallback(currentWindow, scroll_callback);
-
-    if (!glfwGetKey(currentWindow, GLFW_KEY_ESCAPE))
+    if (glfwGetKey(currentWindow, GLFW_KEY_ESCAPE))
     {
-        glfwSetInputMode(currentWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+        glfwSetInputMode(currentWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
     else
     {
-        glfwSetInputMode(currentWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        //glfwSetInputMode(currentWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     }
+
+    if (cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM)
+    {
+        cameraObj->ProcessInput(currentWindow, deltaTime);
+
+        glfwSetCursorPosCallback(currentWindow, mouse_callback);
+        glfwSetScrollCallback(currentWindow, scroll_callback);
+    }
+    
 
 }
 
@@ -95,18 +87,23 @@ void ImGuiRun(ImGuiIO& io)
 
     {
 
-        static int counter = 0;
-        static float blinkSpeed = 20.0f;
-
         ImVec2 standardButtonSize{ 200.0f, .0f };
 
         ImGui::Begin("Hello, world!");
 
-        ImGui::SliderFloat("Blink Speed", &blinkSpeed, 20.0f, 100.0f);
+        ImGui::SliderFloat("Offset X", &cameraOffsetX, -5.0f, 5.0f);
+        ImGui::SliderFloat("Offset Y", &cameraOffsetY, -5.0f, 5.0f);
+        ImGui::SliderFloat("Offset Z", &cameraOffsetZ, -5.0f, 5.0f);
 
-        //ImGui::SliderFloat("Camera Speed", freeRoamCamera->GetCameraSpeed(), 5.0f, 50.0f);
+        if (ImGui::Button("Free Roam", standardButtonSize))
+        {
+            cameraObj->ChangeCameraMode(Camera_Mode::FREE_ROAM);
+        }
 
-        //ImGui::SliderFloat("Mouse Speed", &mouseSensitivity, 0.1f, 1.0f);
+        if (ImGui::Button("Player Mode", standardButtonSize))
+        {
+            cameraObj->ChangeCameraMode(Camera_Mode::PLAYER);
+        }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
@@ -133,6 +130,7 @@ int main(void)
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(1920, 1080, "Doodle Jump Remake", NULL, NULL);
+
     if (!window)
     {
         glfwTerminate();
@@ -147,42 +145,42 @@ int main(void)
     if (glewInit() != GLEW_OK)
         std::cout << "not glew ok" << std::endl;
 
-
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
 
-
-
     {
-       
-        VertexArray va;
 
-        VertexBufferLayout layout;
-        layout.Push<float>(3);
-        layout.Push<float>(2);
-
-        std::unique_ptr<CubeVertexList> cubeVertices(new CubeVertexList);
-
-        VertexBuffer vb(sizeof(cubeVertices->vertices), cubeVertices->vertices);
-
-        va.AddBuffer(vb, layout);
-
-        IndexBuffer ib(cubeVertices->indices, 36);
-
-        //vertex arrays are a way to bind buffers with a certain specification
-        //the process is binding vertex buffer -> using an attrib array to specify the attributes of the vertex -> bind index buffer
-        //Vertex Arrays can be used to differentiate different attributes in the same binding -> modularity?
+        std::unique_ptr<VertexArray> va(new VertexArray);
+        std::unique_ptr<VertexArray> skyboxVA(new VertexArray);
 
 
-        float r = 0.0f;
-        float increment = 0.05f;
+        std::unique_ptr<VertexBufferLayout> layout(new VertexBufferLayout);
+        std::unique_ptr<MeshTemplate> meshTemplate(new MeshTemplate);
+
+        layout->Push<float>(3);
+        layout->Push<float>(2);
+
+        std::unique_ptr<VertexBuffer> vb(new VertexBuffer(sizeof(meshTemplate->m_Cube_Vertices), meshTemplate->m_Cube_Vertices));
+
+        va->AddBuffer(*vb, *layout);
+
+     /*   vb->Unbind();
+        layout->Clear();
+
+        layout->Push<float>(3);
+        layout->Push<float>(2);*/
+
+        //skyboxVA->AddBuffer(*vb, *layout);
+
+        std::unique_ptr<IndexBuffer> ib(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
 
         float oldTimeSinceStart = 0.0f;
 
         std::unique_ptr<Shader> shader(new Shader("res/shaders/Basic.shader"));
+        //std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
 
-        std::unique_ptr<Texture> texture(new Texture("res/textures/ToluChill.png"));
+        //std::unique_ptr<Texture> skyboxTexture(new Texture("res/textures/Sunset.png", true));
 
-        texture->Bind();
+        //skyboxTexture->Bind();
 
         std::unique_ptr<Renderer> renderer(new Renderer);
 
@@ -201,29 +199,46 @@ int main(void)
             
             renderer->Clear();
 
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-          
-           /* glm::mat4 view = glm::mat4(1.0f);
-            view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);*/
-
-            freeRoamCamera->ProcessViewMatrix();
-
-            glm::mat4 projection = glm::mat4(1.0f);
-            projection = glm::perspective(glm::radians(freeRoamCamera->GetFOV()), 1920.0f / 1080.0f, 0.1f, 100.0f);
-
             ProcessInput(window);
 
-            shader->SetUniform4f("u_Colour", r, 0.6f, 0.8f, 1.0f);
+            glm::vec3 playerTransform = glm::vec3(0.5f, 1.0f, 0.0f);
+
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, playerTransform);
+
+            if (cameraObj->GetCameraMode() == Camera_Mode::PLAYER)
+            {
+                cameraObj->PlayerCamera(playerTransform);
+                cameraObj->SetCameraOffset(cameraOffsetX, cameraOffsetY, cameraOffsetZ);
+            }
+
+            cameraObj->ProcessViewMatrix();
+
+            glm::mat4 projection = glm::mat4(1.0f);
+            projection = glm::perspective(glm::radians(cameraObj->GetFOV()), 1920.0f / 1080.0f, 0.1f, 100.0f);
+
+            shader->SetUniform4f("u_Colour", 0.5f, 0.6f, 0.8f, 1.0f);
             shader->SetUnifromMat4("model", model);
-            shader->SetUnifromMat4("view", freeRoamCamera->ProcessViewMatrix());
+            shader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
             shader->SetUnifromMat4("projection", projection);
             shader->Bind();
 
-            renderer->DrawObject(va, ib);
+            renderer->DrawObject(*va, *ib);
+
+            glDepthFunc(GL_LEQUAL);
+
+            //Skybox
+
+ /*           skyboxShader->SetUniform4f("u_Texture", 1.0f, 1.0f, 1.0f, 1.0f);
+            skyboxShader->SetUnifromMat4("view", glm::mat3(freeRoamCamera->ProcessViewMatrix()));
+            skyboxShader->SetUnifromMat4("projection", projection);
+            skyboxShader->Bind();
+
+            renderer->DrawObject(*skyboxVA, *ib);*/
+
+            glDepthFunc(GL_LESS);
 
             //run UI Window
-            ImGuiIO& io = ImGui::GetIO();
             ImGuiRun(io);
            
             /* Swap front and back buffers */
@@ -232,11 +247,10 @@ int main(void)
             /* Poll for and process events */
             glfwPollEvents();
 
-            
-
-            
         }
         shader->Unbind();
+        //skyboxShader->Unbind();
+        //skyboxTexture->Unbind();
 
     }
 

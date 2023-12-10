@@ -1,11 +1,11 @@
 #pragma once
 
-class CubeVertexList
+class MeshTemplate
 {
 public:
 
 
-    float vertices[500] = {
+    float m_Cube_Vertices[500] = {
 
            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, //0
 
@@ -31,7 +31,7 @@ public:
 
     };
 
-    unsigned int indices[500] =
+    unsigned int m_Cube_Indices[500] =
     {
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4,

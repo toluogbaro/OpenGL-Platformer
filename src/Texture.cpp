@@ -2,26 +2,55 @@
 #include "vendor/stb_image/stb_image.h"
 
 
-Texture::Texture(const std::string& path)
+Texture::Texture(const std::string& path, bool isCubemap)
 	: m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_Bits(0)
 {
-	stbi_set_flip_vertically_on_load(1);
-	m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_Bits, 4); //4 is because of rgba
-	
-	glGenTextures(1, &m_RendererID); // generate texture
-	glBindTexture(GL_TEXTURE_2D, m_RendererID); // bind texture
 
-	//-----need to specify these four or will get a black texture-----
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // gets x 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);// gets y
+	if (!isCubemap)
+	{
+		stbi_set_flip_vertically_on_load(1);
+		m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_Bits, 4); //4 is because of rgba
 
-	//-----need to specify these four or will get a black texture-----
+		glGenTextures(1, &m_RendererID); 
+		glBindTexture(GL_TEXTURE_2D, m_RendererID); 
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer);
-	glBindTexture(GL_TEXTURE_2D, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // gets x 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // gets y
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+	}
+	else
+	{
+		std::string cubemapFaces[6] =
+		{
+			path,
+			path,
+			path,
+			path,
+			path,
+			path,
+
+		};
+
+		for (int i = 0; i < cubemapFaces->size(); i++)
+		{
+			m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_Bits, 0); //4 is because of rgba
+			stbi_set_flip_vertically_on_load(0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer);
+		}
+
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	}
 
 	if (m_LocalBuffer)
 		stbi_image_free(m_LocalBuffer);

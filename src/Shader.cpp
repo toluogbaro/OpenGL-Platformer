@@ -5,7 +5,7 @@
 Shader::Shader(const std::string& filepath)
 	: m_Filepath(filepath), m_RendererID(0)
 {
-    ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+    ShaderProgramSource source = ParseShader(filepath);
 
     m_RendererID = CreateShader(source.VertexSource, source.FragmentSource);
 }
@@ -61,7 +61,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
     //C_String is an array of characters which is more efficient
     //Our source string is a file link to our shader
     const char* src = source.c_str();
-    //Takes in shader enum, count of elements in the string array and string array
+    //Takes in shader enum, count of elements in the string array
     //Sets source code of empty shader and compiles
     glShaderSource(id, 1, &src, nullptr);
     glCompileShader(id);
@@ -75,7 +75,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
         char* message = (char*)_malloca(length * sizeof(char));
         glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "Failed to compile shader" << (type == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader") << std::endl;
+        std::cout << "Failed to compile shader" << "" << (type == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader") << std::endl;
         std::cout << message << std::endl;
         glDeleteShader(id);
         return 0;
