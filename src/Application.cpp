@@ -28,19 +28,26 @@ float cameraOffsetX;
 float cameraOffsetY;
 float cameraOffsetZ;
 
+int windowHeight = 1920;
+int windowWidth = 1080;
+
 std::unique_ptr<Camera> cameraObj(new Camera(10.0f, 45.0f));
 
 
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
 {
 
-   if(cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM) cameraObj->ProcessMovement(currentWindow, xPos, yPos);
+   if(cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM) cameraObj->ProcessMouseInput(currentWindow, xPos, yPos, windowHeight, windowWidth);
+   //mouse callback calls this function when mouse input is detected
+   //Movement and rotation control
 
 }
 
 void scroll_callback(GLFWwindow* currentWindow, double xOffset, double yOffset)
 {
     cameraObj->ProcessScroll(yOffset);
+    //scroll callback calls this function when the user scrolls their mousewheel
+    //FOV control
 }
 
 void ProcessInput(GLFWwindow* currentWindow)
@@ -51,13 +58,13 @@ void ProcessInput(GLFWwindow* currentWindow)
     }
     else
     {
-        //glfwSetInputMode(currentWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(currentWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     }
 
     if (cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM)
     {
-        cameraObj->ProcessInput(currentWindow, deltaTime);
+        cameraObj->ProcessKeyInput(currentWindow, deltaTime);
 
         glfwSetCursorPosCallback(currentWindow, mouse_callback);
         glfwSetScrollCallback(currentWindow, scroll_callback);
@@ -128,8 +135,9 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1920, 1080, "Doodle Jump Remake", NULL, NULL);
+    window = glfwCreateWindow(windowHeight, windowWidth, "Doodle Jump Remake", NULL, NULL);
 
     if (!window)
     {
@@ -150,16 +158,21 @@ int main(void)
     {
 
         std::unique_ptr<VertexArray> va(new VertexArray);
-        std::unique_ptr<VertexArray> skyboxVA(new VertexArray);
+        //std::unique_ptr<VertexArray> skyboxVA(new VertexArray);
 
 
         std::unique_ptr<VertexBufferLayout> layout(new VertexBufferLayout);
+        std::unique_ptr<VertexBufferLayout> skyboxLayout(new VertexBufferLayout);
         std::unique_ptr<MeshTemplate> meshTemplate(new MeshTemplate);
 
         layout->Push<float>(3);
         layout->Push<float>(2);
 
         std::unique_ptr<VertexBuffer> vb(new VertexBuffer(sizeof(meshTemplate->m_Cube_Vertices), meshTemplate->m_Cube_Vertices));
+        std::unique_ptr<VertexBuffer> skyboxVB(new VertexBuffer(sizeof(meshTemplate->m_Cube_Vertices), meshTemplate->m_Cube_Vertices));
+
+        skyboxLayout->Push<float>(3);
+        skyboxLayout->Push<float>(2);
 
         va->AddBuffer(*vb, *layout);
 
@@ -169,18 +182,19 @@ int main(void)
         layout->Push<float>(3);
         layout->Push<float>(2);*/
 
-        //skyboxVA->AddBuffer(*vb, *layout);
+        //skyboxVA->AddBuffer(*skyboxVB, *layout);
 
         std::unique_ptr<IndexBuffer> ib(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
+        std::unique_ptr<IndexBuffer> skyboxIB(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
 
         float oldTimeSinceStart = 0.0f;
 
         std::unique_ptr<Shader> shader(new Shader("res/shaders/Basic.shader"));
-        //std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
+        std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
 
-        //std::unique_ptr<Texture> skyboxTexture(new Texture("res/textures/Sunset.png", true));
+        std::unique_ptr<Texture> skyboxTexture(new Texture("res/textures/Sunset.png", true));
 
-        //skyboxTexture->Bind();
+        skyboxTexture->Bind();
 
         std::unique_ptr<Renderer> renderer(new Renderer);
 
@@ -201,7 +215,7 @@ int main(void)
 
             ProcessInput(window);
 
-            glm::vec3 playerTransform = glm::vec3(0.5f, 1.0f, 0.0f);
+            glm::vec3 playerTransform = glm::vec3(0.0f, 0.0f, 0.0f);
 
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
@@ -225,16 +239,18 @@ int main(void)
 
             renderer->DrawObject(*va, *ib);
 
+
             glDepthFunc(GL_LEQUAL);
 
-            //Skybox
+            
 
- /*           skyboxShader->SetUniform4f("u_Texture", 1.0f, 1.0f, 1.0f, 1.0f);
-            skyboxShader->SetUnifromMat4("view", glm::mat3(freeRoamCamera->ProcessViewMatrix()));
-            skyboxShader->SetUnifromMat4("projection", projection);
-            skyboxShader->Bind();
+            skyboxShader->SetUniform4f("u_Texture", 1.0f, 1.0f, 1.0f, 1.0f);
+            skyboxShader->SetUnifromMat4("skyboxView", glm::mat3(1.0f));
+            skyboxShader->SetUnifromMat4("skyboxProjection", projection);
+            //skyboxShader->Bind();
 
-            renderer->DrawObject(*skyboxVA, *ib);*/
+            //renderer->DrawObject(*skyboxVA, *skyboxIB);
+
 
             glDepthFunc(GL_LESS);
 
@@ -249,8 +265,8 @@ int main(void)
 
         }
         shader->Unbind();
-        //skyboxShader->Unbind();
-        //skyboxTexture->Unbind();
+        skyboxShader->Unbind();
+        skyboxTexture->Unbind();
 
     }
 

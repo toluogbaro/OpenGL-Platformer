@@ -5,12 +5,12 @@ layout(location = 0) in vec4 position;
 
 out vec3 texCoord;
 
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 skyboxView;
+uniform mat4 skyboxProjection;
 
 void main()
 {
-	vec4 pos = view * projection * position;
+	vec4 pos = skyboxView * skyboxProjection * position;
 	gl_Position = vec4(pos.x, pos.y, pos.w, pos.w);
 	texCoord = vec3(pos.x, pos.y, -pos.z);
 };

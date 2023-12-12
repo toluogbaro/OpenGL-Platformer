@@ -3,7 +3,7 @@
 
 
 Shader::Shader(const std::string& filepath)
-	: m_Filepath(filepath), m_RendererID(0)
+	: m_Filepath(filepath)
 {
     ShaderProgramSource source = ParseShader(filepath);
 
@@ -98,7 +98,7 @@ unsigned int Shader::CreateShader(const std::string& vertexShader, const std::st
     glAttachShader(program, vs);
     glAttachShader(program, fs);
 
-    //links the program object after attaching shaders to it
+    
     glLinkProgram(program);
 
     //Checks to see if program can execute

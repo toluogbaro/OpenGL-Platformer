@@ -7,7 +7,7 @@ Camera::~Camera()
 {
 }
 
-void Camera::ProcessInput(GLFWwindow* currentWindow, float deltaTime)
+void Camera::ProcessKeyInput(GLFWwindow* currentWindow, float deltaTime)
 {
 
     if (m_CameraMode == Camera_Mode::FREE_ROAM)
@@ -30,17 +30,22 @@ void Camera::ProcessInput(GLFWwindow* currentWindow, float deltaTime)
 }
 
 
-void Camera::ProcessMovement(GLFWwindow* currentWindow , double xPos, double yPos)
+void Camera::ProcessMouseInput(GLFWwindow* currentWindow , double xPos, double yPos, int windowHeight, int windowWidth)
 {
-    //if (m_FirstMouseInput)
-    //{
 
-    //    xPos = m_LastMouseX;
-    //    yPos = m_LastMouseY;
-    //    m_FirstMouseInput = false;
-    //    //added so that the mouse doesn't fly off when it first detects input
-    //}
-    
+ /*   if (m_FirstMouseInput)
+    {
+
+        xPos = windowWidth / 2;
+        yPos = windowHeight / 2;
+
+        std::cout << "X postion: " << xPos << std::endl;
+        std::cout << "Y postion: " << yPos << std::endl;
+
+        m_FirstMouseInput = false;
+        return;
+    }*/
+
     m_XOffset = xPos - m_LastMouseX;
     m_YOffset = m_LastMouseY - yPos;
 
@@ -74,6 +79,7 @@ void Camera::ProcessMovement(GLFWwindow* currentWindow , double xPos, double yPo
  
 }
 
+
 void Camera::ProcessScroll(double scrollDepth)
 {
     m_FOV -= (float)scrollDepth;
@@ -84,6 +90,7 @@ void Camera::ProcessScroll(double scrollDepth)
     if (m_FOV > 45.0f)
         m_FOV = 45.0f;
 }
+
 
 glm::mat4 Camera::ProcessViewMatrix()
 {

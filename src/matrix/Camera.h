@@ -37,7 +37,6 @@ class Camera
 		float m_YOffset;
 
 		bool m_FirstMouseInput;
-		bool m_MouseDisabled;
 
 	public:
 		Camera(float moveSpeed, float fov)
@@ -56,16 +55,16 @@ class Camera
 			m_XOffset = 0.0f;
 			m_YOffset = 0.0f;
 			m_FirstMouseInput = true;
-			m_MouseDisabled = false;
+
 		}
 
 		~Camera();
 
 		//Camera Movement
-		void ProcessInput(GLFWwindow* window, float deltaTime);
+		void ProcessKeyInput(GLFWwindow* window, float deltaTime);
 
 		//Mouse Movement
-		void ProcessMovement(GLFWwindow* currentWindow, double xMousePosition, double yMousePosition);
+		void ProcessMouseInput(GLFWwindow* currentWindow, double xMousePosition, double yMousePosition, int windowHeight, int windowWidth);
 		void ProcessScroll(double scrollDepth);
 
 		void PlayerCamera(glm::vec3 playerPos);
