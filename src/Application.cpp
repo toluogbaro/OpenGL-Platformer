@@ -50,6 +50,12 @@ void scroll_callback(GLFWwindow* currentWindow, double xOffset, double yOffset)
     //FOV control
 }
 
+void key_callback(GLFWwindow* currentWindow, int key, int scancode, int action, int mods)
+{
+    std::cout << "Key: " << glfwGetKeyName(key, 0) << " is pressed." << std::endl;
+}
+
+
 void ProcessInput(GLFWwindow* currentWindow)
 {
     if (glfwGetKey(currentWindow, GLFW_KEY_ESCAPE))
@@ -158,7 +164,6 @@ int main(void)
     {
 
         std::unique_ptr<VertexArray> va(new VertexArray);
-        //std::unique_ptr<VertexArray> skyboxVA(new VertexArray);
 
 
         std::unique_ptr<VertexBufferLayout> layout(new VertexBufferLayout);
@@ -175,19 +180,11 @@ int main(void)
         skyboxLayout->Push<float>(2);
 
         va->AddBuffer(*vb, *layout);
+        va->AddBuffer(*skyboxVB, *skyboxLayout);
 
-     /*   vb->Unbind();
-        layout->Clear();
-
-        layout->Push<float>(3);
-        layout->Push<float>(2);*/
-
-        //skyboxVA->AddBuffer(*skyboxVB, *layout);
 
         std::unique_ptr<IndexBuffer> ib(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
         std::unique_ptr<IndexBuffer> skyboxIB(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
-
-        float oldTimeSinceStart = 0.0f;
 
         std::unique_ptr<Shader> shader(new Shader("res/shaders/Basic.shader"));
         std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
@@ -204,6 +201,8 @@ int main(void)
 
         ImGuiIO& io = ImGui::GetIO();
 
+        float oldTimeSinceStart = 0.0f;
+
         while (!glfwWindowShouldClose(window))
         {
             
@@ -214,6 +213,7 @@ int main(void)
             renderer->Clear();
 
             ProcessInput(window);
+            //glfwSetKeyCallback(window, key_callback);
 
             glm::vec3 playerTransform = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -231,7 +231,8 @@ int main(void)
             glm::mat4 projection = glm::mat4(1.0f);
             projection = glm::perspective(glm::radians(cameraObj->GetFOV()), 1920.0f / 1080.0f, 0.1f, 100.0f);
 
-            shader->SetUniform4f("u_Colour", 0.5f, 0.6f, 0.8f, 1.0f);
+
+            shader->SetUniform4f("u_Colour", 1.0f, 0.6f, 0.8f, 1.0f);
             shader->SetUnifromMat4("model", model);
             shader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
             shader->SetUnifromMat4("projection", projection);
@@ -239,20 +240,31 @@ int main(void)
 
             renderer->DrawObject(*va, *ib);
 
+            glm::mat4 platformModel = glm::mat4(1.0f);
+            glm::vec3 platformPos = glm::vec3(0.0f);
+            platformPos.y = playerTransform.y - 6.0f;
+            platformModel = glm::translate(platformModel, platformPos);
+            platformModel = glm::scale(platformModel, glm::vec3(10.0f));
+
+            shader->SetUniform4f("u_Colour", 0.0f, 0.6f, 0.8f, 1.0f);
+            shader->SetUnifromMat4("model", platformModel);
+            shader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
+            shader->SetUnifromMat4("projection", projection);
+            shader->Bind();
+
+            
+            renderer->DrawObject(*va, *ib);
+            
 
             glDepthFunc(GL_LEQUAL);
 
-            
-
-            skyboxShader->SetUniform4f("u_Texture", 1.0f, 1.0f, 1.0f, 1.0f);
-            skyboxShader->SetUnifromMat4("skyboxView", glm::mat3(1.0f));
-            skyboxShader->SetUnifromMat4("skyboxProjection", projection);
+            //skyboxShader->SetUniform4f("u_Texture", 1.0f, 1.0f, 1.0f, 1.0f);
             //skyboxShader->Bind();
 
-            //renderer->DrawObject(*skyboxVA, *skyboxIB);
-
+            //renderer->DrawObject(*va, *ib);
 
             glDepthFunc(GL_LESS);
+
 
             //run UI Window
             ImGuiRun(io);
