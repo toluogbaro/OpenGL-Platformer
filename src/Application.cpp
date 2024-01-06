@@ -23,6 +23,11 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 
+#include "World.h"
+#include "Entity.h"
+
+
+
 float deltaTime;
 float cameraOffsetX;
 float cameraOffsetY;
@@ -203,6 +208,11 @@ int main(void)
 
         float oldTimeSinceStart = 0.0f;
 
+        World gameWorld;
+        Entity player = gameWorld.create_entity("player");
+        player.add_component<Transform>();
+        player.add_component<GravityComponent>();
+
         while (!glfwWindowShouldClose(window))
         {
             
@@ -215,7 +225,11 @@ int main(void)
             ProcessInput(window);
             //glfwSetKeyCallback(window, key_callback);
 
-            glm::vec3 playerTransform = glm::vec3(0.0f, 0.0f, 0.0f);
+            float x = player.get_component<Transform>().posX;
+            float y = player.get_component<Transform>().posY;
+            float z = player.get_component<Transform>().posZ;
+
+            glm::vec3 playerTransform = glm::vec3(x, y, z);
 
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
@@ -242,7 +256,7 @@ int main(void)
 
             glm::mat4 platformModel = glm::mat4(1.0f);
             glm::vec3 platformPos = glm::vec3(0.0f);
-            platformPos.y = playerTransform.y - 6.0f;
+            platformPos.y = playerTransform.y - 7.5f;
             platformModel = glm::translate(platformModel, platformPos);
             platformModel = glm::scale(platformModel, glm::vec3(10.0f));
 
@@ -254,6 +268,8 @@ int main(void)
 
             
             renderer->DrawObject(*va, *ib);
+
+            gameWorld.Update();
             
 
             glDepthFunc(GL_LEQUAL);
