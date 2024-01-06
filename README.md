@@ -1,6 +1,6 @@
 # Comp703-Submission
 
-Recreating Doodle Jump in 3D with nothing but Visual Studio and my hopes and dreams
+Recreating Doodle Jump in 3D with nothing but Visual Studio and my blood, sweat and tears. Mostly tears
 
 My name is Tolu Ogbaro and I'm a masters student on the Msc Programming Course
 
@@ -9,33 +9,56 @@ Creative Commons Licence if you really want to
 For the Comp703 module we're using digital games technology to recreate modern classics using low level graphics and game engine components from scratch 
 without using a game engine. 
 
-My APIs of choice are OpenGL and SDL2.
+My API of choice is OpenGL.
 
-For this remake, the platforming will be horizontal with slime characters. Oh and its also PvP multiplayer because I'm a masochist.
+For this remake, my plan has changed to having just a single slime character platforming.
 
-To play around with the project in its current form, just download and unzip then open the visual studio solution and press [F5] to run the build
+To play around with the project in its current form requires downloading the solution file and setting up the include directories as follows:
 
-My four step program to achieve this:
+In the solution properties general configurations first set the C++ Language Standard to C++17.
+
+In C/C++ General Additional Include Directories:
+
+$(SolutionDir)Dependencies\glfw\include
+$(SolutionDir)Dependencies\glew\include
+$(SolutionDir)src/vendor
+$(SolutionDir)src
+
+In C/C++ Preprocessor. Set the Preprocessor Definitions to GLEW_STATIC
+
+In Linker General set the Addition Include Libraries:
+
+$(SolutionDir)Dependencies\glfw\lib-vc2022
+$(SolutionDir)Dependencies\glew\lib\Release\Win32
+
+In Linker Input set the Additional Dependencies:
+
+glfw3.lib
+glew32s.lib
+opengl32.lib
+User32.lib
+Gdi32.lib
+Shell32.lib
+
+and finally make sure the project is configured for ALL CONFIGURATIONS and set the platform to Windows32
+
+My steps to achieve this project has been:
 
 1 -> Learning how to render using OpenGL
 
-2 -> Softbody Physics for ball movement, faking a slime shader with fluid refraction and then adding basic SDL Input
+2 -> Creating a basic physics engine using an Entity Component System with entt library that simulates real world physics
 
-3 -> Rendering platforms with different attributes using an entity component system; i.e platforms bending at different angles. Platforms with mesh renderers that
-make them look ghost like (fall through platforms) and platforms affected by mass on each side that require the player to jump in the in the middle
-
-4 -> Tying it all together with socket programming or with the SDL Networking Library
+3 -> Using the engine to simulate softbody physics and creating a slime shader with refraction
 
 From mid November 2023 - Beginning of December 2023, Im just getting used to OpenGL and going through some basic tutorials
 
-From December 2023, I will be attempting to do step 2
+From December 2023 onward, I will be attempting to do step 2
 
-After step 2, Ill start with the network programming, just to set everything up prematurely and render on two screens with two different inputs
-
-Then Ill do step 3
-
-From Beginning of January 2024, I'll focus on Step 4 and the finishing touches until its submission time
+From Beginning of January 2024, I'll focus on Step 3 and the finishing touches until its submission time
 
 For my stretch goals, I want to add SDL audio and make a couple custom game tunes with Bosca Ceoil if I have the time
 
 Thanks for stopping by and witnessing my suffering
+
+Update: Unfortunately I ran into complications with my laptop being broken over the christmas holiday.
+From December 22nd - January 3rd I haven't been able to do much but the project is still underway
