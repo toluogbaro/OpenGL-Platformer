@@ -57,10 +57,10 @@
     <ClCompile Include="src\matrix\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="World.cpp">
+    <ClCompile Include="src\World.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Entity.cpp">
+    <ClCompile Include="src\Entity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

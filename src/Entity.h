@@ -1,16 +1,23 @@
 #pragma once
 
+#include "entt/entt.hpp"
 #include "World.h"
 
 class Entity
 {
 	private:
-		entt::entity entity_handle = entt::null;
+		
 		World* world = NULL;
-		float m_Mass;
+
+		entt::entity entity_handle = entt::null;
 
 	public:
+
+		float m_Mass;
+
 		Entity(entt::entity s_entity_handle, World* s_world);
+
+		~Entity();
 
 		inline entt::entity get_handle() { return entity_handle; }
 

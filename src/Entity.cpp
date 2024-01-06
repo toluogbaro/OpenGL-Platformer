@@ -5,3 +5,8 @@ Entity::Entity(entt::entity s_entity_handle, World* s_world)
 {
 
 }
+
+Entity::~Entity()
+{
+
+}

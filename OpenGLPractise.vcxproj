@@ -152,8 +152,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\matrix\Camera.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
@@ -167,7 +167,7 @@
     <ClCompile Include="src\VertexArray.cpp" />
     <ClCompile Include="src\VertexBuffer.cpp" />
     <ClCompile Include="src\VertexBufferLayout.cpp" />
-    <ClCompile Include="World.cpp" />
+    <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />

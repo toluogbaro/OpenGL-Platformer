@@ -77,6 +77,8 @@ class Camera
 
 		inline void ChangeCameraMode(Camera_Mode newCamMode) { m_CameraMode = newCamMode;  }
 		inline void SetCameraOffset(float x, float y, float z) { m_CameraOffset = glm::vec3(x, y, z);  }
+		//inline float GetCameraSpeed() { return m_MoveSpeed;  }
+		//inline void SetCameraSpeed(float newSpeed) { m_MoveSpeed = newSpeed; }
 
 		inline void SetCameraDirection()
 		{

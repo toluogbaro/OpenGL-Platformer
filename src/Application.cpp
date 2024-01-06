@@ -36,7 +36,9 @@ float cameraOffsetZ;
 int windowHeight = 1920;
 int windowWidth = 1080;
 
-std::unique_ptr<Camera> cameraObj(new Camera(10.0f, 45.0f));
+std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
+static bool isGameStarted;
+World gameWorld;
 
 
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
@@ -121,6 +123,11 @@ void ImGuiRun(ImGuiIO& io)
         if (ImGui::Button("Player Mode", standardButtonSize))
         {
             cameraObj->ChangeCameraMode(Camera_Mode::PLAYER);
+        }
+
+        if (ImGui::Button("Start Game", standardButtonSize))
+        {
+            isGameStarted = true;
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
@@ -208,10 +215,19 @@ int main(void)
 
         float oldTimeSinceStart = 0.0f;
 
-        World gameWorld;
+        
         Entity player = gameWorld.create_entity("player");
         player.add_component<Transform>();
-        player.add_component<GravityComponent>();
+        player.add_component<Gravity>();
+
+        entt::entity currentEntt = player.get_handle();
+
+        glm::vec3 playerTransform = glm::vec3(0.0f);
+
+        glm::vec3 platformPos = glm::vec3(0.0f);
+        platformPos.y = playerTransform.y - 7.5f;
+       
+       
 
         while (!glfwWindowShouldClose(window))
         {
@@ -229,7 +245,8 @@ int main(void)
             float y = player.get_component<Transform>().posY;
             float z = player.get_component<Transform>().posZ;
 
-            glm::vec3 playerTransform = glm::vec3(x, y, z);
+            playerTransform = glm::vec3(x, y, z);
+
 
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
@@ -243,7 +260,7 @@ int main(void)
             cameraObj->ProcessViewMatrix();
 
             glm::mat4 projection = glm::mat4(1.0f);
-            projection = glm::perspective(glm::radians(cameraObj->GetFOV()), 1920.0f / 1080.0f, 0.1f, 100.0f);
+            projection = glm::perspective(glm::radians(cameraObj->GetFOV()), 1920.0f / 1080.0f, 0.1f, 1000.0f);
 
 
             shader->SetUniform4f("u_Colour", 1.0f, 0.6f, 0.8f, 1.0f);
@@ -255,8 +272,6 @@ int main(void)
             renderer->DrawObject(*va, *ib);
 
             glm::mat4 platformModel = glm::mat4(1.0f);
-            glm::vec3 platformPos = glm::vec3(0.0f);
-            platformPos.y = playerTransform.y - 7.5f;
             platformModel = glm::translate(platformModel, platformPos);
             platformModel = glm::scale(platformModel, glm::vec3(10.0f));
 
@@ -269,8 +284,8 @@ int main(void)
             
             renderer->DrawObject(*va, *ib);
 
-            gameWorld.Update();
             
+            if (isGameStarted) gameWorld.Update();
 
             glDepthFunc(GL_LEQUAL);
 

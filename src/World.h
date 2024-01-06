@@ -1,7 +1,6 @@
 #pragma once
 #include "entt/entt.hpp"
 #include "Component.h"
-#include "Entity.h"
 
 
 class Entity;
@@ -22,7 +21,9 @@ class World
 
 		void Update();
 		
-		void Gravity();
+		void GravitySystem();
+
+		void CollisionSystem();
 
 		friend class Entity;
 
