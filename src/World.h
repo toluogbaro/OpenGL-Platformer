@@ -19,11 +19,13 @@ class World
 
 		Entity create_entity(std::string tag);
 
-		void Update(float deltaTime);
+		void Update(float dt);
 		
-		void GravitySystem(float deltaTime);
+		void GravitySystem(float dt);
 
 		void CollisionSystem();
+
+		void ProjectileMotionSystem(float dt);
 
 		friend class Entity;
 

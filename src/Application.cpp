@@ -38,6 +38,7 @@ int windowWidth = 1080;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
 static bool isGameStarted;
+
 World gameWorld;
 
 
@@ -61,7 +62,6 @@ void key_callback(GLFWwindow* currentWindow, int key, int scancode, int action, 
 {
     std::cout << "Key: " << glfwGetKeyName(key, 0) << " is pressed." << std::endl;
 }
-
 
 void ProcessInput(GLFWwindow* currentWindow)
 {
@@ -130,6 +130,7 @@ void ImGuiRun(ImGuiIO& io)
             isGameStarted = true;
         }
 
+
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
@@ -138,6 +139,21 @@ void ImGuiRun(ImGuiIO& io)
     ImGui::Render();
     ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
+}
+
+bool CollisionDetection(glm::vec3 positionOne, glm::vec3 positionTwo)
+{
+    glm::vec3 distAB = positionTwo - positionOne;
+
+    if (distAB.y >= 0.5f)
+    {
+        std::cout << distAB.y << std::endl;
+
+        return true;
+    }
+    
+    
+    return false;
 }
 
 int main(void)
@@ -220,14 +236,16 @@ int main(void)
         player.add_component<Transform>();
         player.add_component<Gravity>();
 
-        entt::entity currentEntt = player.get_handle();
-
-        glm::vec3 playerTransform = glm::vec3(0.0f);
+        Entity projectile = gameWorld.create_entity("projectile");
+        projectile.add_component<Transform>();
+        projectile.add_component<Kinematic>();
+ 
+        glm::vec3 originalPos = glm::vec3(0.0f);
+        glm::vec3 playerTransform = originalPos;
 
         glm::vec3 platformPos = glm::vec3(0.0f);
         platformPos.y = playerTransform.y - 7.5f;
-       
-       
+
 
         while (!glfwWindowShouldClose(window))
         {
@@ -247,8 +265,18 @@ int main(void)
 
             playerTransform = glm::vec3(x, y, z);
 
-            glm::vec3 distAB = platformPos - playerTransform;
+     /*       projectile.get_component<Kinematic>().accelerationX = 0.0f;
+            projectile.get_component<Kinematic>().accelerationY = -9.81f;
+            projectile.get_component<Kinematic>().angle = 45.0f;
+            projectile.get_component<Kinematic>().power = 200.0f;
+            projectile.get_component<Kinematic>().velocityX = playerTransform.x;
+            projectile.get_component<Kinematic>().velocityY = playerTransform.y;
 
+            x = projectile.get_component<Transform>().posX;
+            y = projectile.get_component<Transform>().posY;
+
+            playerTransform = glm::vec3(x, y, z);*/
+                   
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
 

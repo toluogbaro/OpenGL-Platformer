@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include "Entity.h"
 #include <stdio.h>
+#include "glm/gtc/matrix_transform.hpp"
 
 
 World::World()
@@ -24,7 +25,7 @@ Entity World::create_entity(std::string tag)
 }
 
 
-void World::GravitySystem(float deltaTime)
+void World::GravitySystem(float dt)
 {
     
     for (
@@ -33,8 +34,8 @@ void World::GravitySystem(float deltaTime)
         )
     {
         
-        gravity.velocity += gravity.Gravitational_Constant * deltaTime;
-        transform.posY += gravity.velocity * deltaTime;
+        gravity.velocity += gravity.Gravitational_Constant * dt;
+        transform.posY += gravity.velocity * dt;
 
         //dampen gravity with air resistance
 
@@ -56,11 +57,35 @@ void World::CollisionSystem()
 
 }
 
+void World::ProjectileMotionSystem(float dt)
+{
+
+    for (
+        auto [entity, kinematic, transform] :
+        registry.view<Kinematic, Transform>().each()
+        )
+    {
+        float xVector = glm::cos(kinematic.angle * (3.14f / 180.0f) * kinematic.power);
+        float yVector = glm::sin(kinematic.angle * (3.14f / 180.0f) * kinematic.power);
+
+        float finalPosX = (kinematic.accelerationX / 2.0f) * (dt * dt) + (kinematic.velocityX * dt) + xVector;
+        float finalPosY = (kinematic.accelerationY / 2.0f) * (dt * dt) + (kinematic.velocityY * dt) + yVector;
+
+        transform.posX += finalPosX;
+        transform.posY += finalPosY;
+
+
+        //angles not working right, clean it up
+    }
+
+}
+
 
 
 void World::Update(float deltaTime)
 {
     CollisionSystem();
     GravitySystem(deltaTime);
+    //ProjectileMotionSystem(deltaTime);
    
 }

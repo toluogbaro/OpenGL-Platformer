@@ -40,6 +40,8 @@ User32.lib
 Gdi32.lib
 Shell32.lib
 
+Then to wrap it up, add the bin and include files from glew into the glew folder to link glew32s.lib
+
 and finally make sure the project is configured for ALL CONFIGURATIONS and set the platform to Windows32
 
 My steps to achieve this project has been:
