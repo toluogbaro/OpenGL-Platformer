@@ -2,6 +2,7 @@
 
 #include <string>
 
+
 struct TagComponent
 {
 	std::string tag;
@@ -30,14 +31,14 @@ struct VelocityComponent
 
 struct Collision
 {
-
+	
 };
 
 struct Gravity
 {
 
 	//acceleration
-	const float Gravitational_Constant = -0.0000001f;
+	const float Gravitational_Constant = -9.81f;
 	float deltaTime;
 	float velocity;
 	float weight;

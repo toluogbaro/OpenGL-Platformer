@@ -19,9 +19,9 @@ class World
 
 		Entity create_entity(std::string tag);
 
-		void Update();
+		void Update(float deltaTime);
 		
-		void GravitySystem();
+		void GravitySystem(float deltaTime);
 
 		void CollisionSystem();
 

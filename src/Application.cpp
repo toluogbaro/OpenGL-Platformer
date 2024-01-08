@@ -247,6 +247,7 @@ int main(void)
 
             playerTransform = glm::vec3(x, y, z);
 
+            glm::vec3 distAB = platformPos - playerTransform;
 
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
@@ -285,7 +286,10 @@ int main(void)
             renderer->DrawObject(*va, *ib);
 
             
-            if (isGameStarted) gameWorld.Update();
+            if (isGameStarted)
+            {
+                gameWorld.Update(deltaTime);
+            } 
 
             glDepthFunc(GL_LEQUAL);
 

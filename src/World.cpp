@@ -24,23 +24,17 @@ Entity World::create_entity(std::string tag)
 }
 
 
-void World::GravitySystem()
+void World::GravitySystem(float deltaTime)
 {
-    float oldTimeSinceStart = 0.0f;
     
-
     for (
         auto [entity, gravity, transform] :
         registry.view<Gravity, Transform>().each()
         )
     {
         
-        float timeSinceStart = static_cast<float>(glfwGetTime());
-        gravity.deltaTime = timeSinceStart - oldTimeSinceStart;
-        oldTimeSinceStart = timeSinceStart;
-
-        gravity.velocity += gravity.Gravitational_Constant * gravity.deltaTime;
-        transform.posY += gravity.velocity * gravity.deltaTime;
+        gravity.velocity += gravity.Gravitational_Constant * deltaTime;
+        transform.posY += gravity.velocity * deltaTime;
 
         //dampen gravity with air resistance
 
@@ -52,14 +46,21 @@ void World::GravitySystem()
 
 void World::CollisionSystem()
 {
+    for (
+        auto [entity, gravity, transform] :
+        registry.view<Gravity, Transform>().each()
+        )
+    {
+        //AABB COLLISION
+    }
 
 }
 
 
 
-void World::Update()
+void World::Update(float deltaTime)
 {
     CollisionSystem();
-    GravitySystem();
+    GravitySystem(deltaTime);
    
 }
