@@ -215,7 +215,8 @@ int main(void)
         std::unique_ptr<IndexBuffer> skyboxIB(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
 
         std::unique_ptr<Shader> shader(new Shader("res/shaders/Basic.shader"));
-        std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
+        //std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
+        std::unique_ptr<Shader> lightShader(new Shader("res/shaders/light.shader"));
 
         std::unique_ptr<Texture> skyboxTexture(new Texture("res/textures/Sunset.png", true));
 
@@ -242,6 +243,7 @@ int main(void)
  
         glm::vec3 originalPos = glm::vec3(0.0f);
         glm::vec3 playerTransform = originalPos;
+        
 
         glm::vec3 platformPos = glm::vec3(0.0f);
         platformPos.y = playerTransform.y - 7.5f;
@@ -310,10 +312,28 @@ int main(void)
             shader->SetUnifromMat4("projection", projection);
             shader->Bind();
 
-            
             renderer->DrawObject(*va, *ib);
 
+            glm::mat4 lightModel = glm::mat4(1.0f);
+            lightModel = glm::translate(lightModel, originalPos + 1.5f);
+            lightModel = glm::scale(lightModel, glm::vec3(2.0f));
+
+            float ambientStrength = 0.1;
+            glm::vec4 lightColour = glm::vec4(1.0f);
+            glm::vec4 ambient = ambientStrength * lightColour;
+            glm::vec4 col = ambient * lightColour;
+
+            //calculations need to be applied to cube itself
             
+
+            lightShader->SetUniform4f("u_ObjectColour", col.r, col.g, col.b, col.a);
+            lightShader->SetUnifromMat4("model", lightModel);
+            lightShader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
+            lightShader->SetUnifromMat4("projection", projection);
+            lightShader->Bind();
+
+            renderer->DrawObject(*va, *ib);
+
             if (isGameStarted)
             {
                 gameWorld.Update(deltaTime);
@@ -340,7 +360,7 @@ int main(void)
 
         }
         shader->Unbind();
-        skyboxShader->Unbind();
+       //skyboxShader->Unbind();
         skyboxTexture->Unbind();
 
     }

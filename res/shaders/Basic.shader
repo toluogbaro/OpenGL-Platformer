@@ -3,6 +3,7 @@
 
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec2 texCoordinates;
+layout(location = 2) in vec3 normal;
 
 out vec2 v_TexCoord;
 
@@ -29,6 +30,7 @@ uniform sampler2D u_Texture;
 void main()
 {
    vec4 textureColour = texture(u_Texture, v_TexCoord);
+    
    color = u_Colour;
    
 };
