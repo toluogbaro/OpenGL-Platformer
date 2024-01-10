@@ -32,6 +32,7 @@ float deltaTime;
 float cameraOffsetX;
 float cameraOffsetY;
 float cameraOffsetZ;
+float cameraAngle;
 
 int windowHeight = 1920;
 int windowWidth = 1080;
@@ -141,19 +142,20 @@ void ImGuiRun(ImGuiIO& io)
 
 }
 
-bool CollisionDetection(glm::vec3 positionOne, glm::vec3 positionTwo)
+bool CollisionDetection(glm::vec3 positionOne, glm::vec3 sizeOne, glm::vec3 positionTwo, glm::vec3 sizeTwo, float collisionOffset)
 {
-    glm::vec3 distAB = positionTwo - positionOne;
+    //bool collisionX = positionOne.x
 
-    if (distAB.y >= 0.5f)
-    {
-        std::cout << distAB.y << std::endl;
+    bool collisionX = positionOne.x + (sizeOne.x / 2.0f) + collisionOffset >= positionTwo.x &&
+        positionTwo.x + (sizeTwo.x / 2.0f) + collisionOffset >= positionOne.x;
 
-        return true;
-    }
-    
-    
-    return false;
+    bool collisionY = positionOne.y + (sizeOne.y / 2.0f) + collisionOffset >= positionTwo.y &&
+        positionTwo.y + (sizeTwo.y / 2.0f) + collisionOffset >= positionOne.y;
+
+    bool collisionZ = positionOne.z + (sizeOne.z / 2.0f) + collisionOffset >= positionTwo.z &&
+        positionTwo.z + (sizeTwo.z / 2.0f) + collisionOffset >= positionOne.z;
+
+    return collisionX && collisionY && collisionZ;
 }
 
 int main(void)
@@ -261,11 +263,11 @@ int main(void)
             ProcessInput(window);
             //glfwSetKeyCallback(window, key_callback);
 
-            float x = player.get_component<Transform>().posX;
+           /* float x = player.get_component<Transform>().posX;
             float y = player.get_component<Transform>().posY;
             float z = player.get_component<Transform>().posZ;
 
-            playerTransform = glm::vec3(x, y, z);
+            playerTransform = glm::vec3(x, y, z);*/
 
      /*       projectile.get_component<Kinematic>().accelerationX = 0.0f;
             projectile.get_component<Kinematic>().accelerationY = -9.81f;
@@ -278,6 +280,46 @@ int main(void)
             y = projectile.get_component<Transform>().posY;
 
             playerTransform = glm::vec3(x, y, z);*/
+
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            {
+                playerTransform.z += 20.0f * deltaTime;
+
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            {
+                playerTransform.z -= 20.0f * deltaTime;
+
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            {
+                playerTransform.x -= 20.0f * deltaTime;
+
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            {
+                playerTransform.x += 20.0f * deltaTime;
+
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            {
+                playerTransform.y -= 2.0f * deltaTime;
+
+            }
+
+            if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+            {
+                playerTransform.y += 2.0f * deltaTime;
+
+            }
+
+            
+
+            
                    
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
@@ -293,7 +335,6 @@ int main(void)
             glm::mat4 projection = glm::mat4(1.0f);
             projection = glm::perspective(glm::radians(cameraObj->GetFOV()), 1920.0f / 1080.0f, 0.1f, 1000.0f);
 
-
             shader->SetUniform4f("u_Colour", 1.0f, 0.6f, 0.8f, 1.0f);
             shader->SetUnifromMat4("model", model);
             shader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
@@ -304,7 +345,8 @@ int main(void)
 
             glm::mat4 platformModel = glm::mat4(1.0f);
             platformModel = glm::translate(platformModel, platformPos);
-            platformModel = glm::scale(platformModel, glm::vec3(10.0f));
+            glm::vec3 platformSize = glm::vec3(10.0f);
+            platformModel = glm::scale(platformModel, platformSize);
 
             shader->SetUniform4f("u_Colour", 0.0f, 0.6f, 0.8f, 1.0f);
             shader->SetUnifromMat4("model", platformModel);
@@ -318,26 +360,23 @@ int main(void)
             lightModel = glm::translate(lightModel, originalPos + 1.5f);
             lightModel = glm::scale(lightModel, glm::vec3(2.0f));
 
-            float ambientStrength = 0.1;
-            glm::vec4 lightColour = glm::vec4(1.0f);
-            glm::vec4 ambient = ambientStrength * lightColour;
-            glm::vec4 col = ambient * lightColour;
-
-            //calculations need to be applied to cube itself
-            
-
-            lightShader->SetUniform4f("u_ObjectColour", col.r, col.g, col.b, col.a);
+           /* lightShader->SetUniform4f("u_LightColour", 1.0f, 1.0f, 1.0f, 1.0f);
             lightShader->SetUnifromMat4("model", lightModel);
             lightShader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
             lightShader->SetUnifromMat4("projection", projection);
-            lightShader->Bind();
-
-            renderer->DrawObject(*va, *ib);
+            lightShader->Bind();*/
+            
+            //renderer->DrawObject(*va, *ib);
 
             if (isGameStarted)
             {
                 gameWorld.Update(deltaTime);
             } 
+
+            if (CollisionDetection(playerTransform, glm::vec3(1.0f), platformPos, platformSize, 0.5f))
+            {
+                std::cout << "collision" << std::endl;
+            }
 
             glDepthFunc(GL_LEQUAL);
 

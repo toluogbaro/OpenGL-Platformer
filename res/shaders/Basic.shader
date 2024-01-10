@@ -3,7 +3,6 @@
 
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec2 texCoordinates;
-layout(location = 2) in vec3 normal;
 
 out vec2 v_TexCoord;
 
@@ -20,17 +19,20 @@ void main()
 #shader fragment
 #version 410 core
 
+
 layout(location = 0) out vec4 color;
 
-in vec2 v_TexCoord;
-
+vec4 u_AmbientColour = vec4(0.5);
 uniform vec4 u_Colour;
 uniform sampler2D u_Texture;
 
 void main()
 {
-   vec4 textureColour = texture(u_Texture, v_TexCoord);
-    
-   color = u_Colour;
+   
+    float ambientStrength = 0.1;
+    vec4 ambient = ambientStrength * u_AmbientColour;
+    vec4 result = ambient * u_Colour;
+
+    color = u_Colour;
    
 };

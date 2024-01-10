@@ -171,8 +171,8 @@
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="light.shader" />
     <None Include="res\shaders\Basic.shader" />
+    <None Include="res\shaders\light.shader" />
     <None Include="res\shaders\Skybox.shader" />
   </ItemGroup>
   <ItemGroup>
