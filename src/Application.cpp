@@ -37,6 +37,7 @@ float cameraAngle;
 int windowHeight = 640;
 int windowWidth = 480;
 
+
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
 static bool isGameStarted;
 
@@ -355,8 +356,7 @@ int main(void)
             renderer->DrawObject(*va, *ib);
 
             glm::mat4 lightModel = glm::mat4(1.0f);
-            lightModel = glm::translate(lightModel, originalPos + 1.5f);
-            lightModel = glm::scale(lightModel, glm::vec3(2.0f));
+            
 
            /* lightShader->SetUniform4f("u_LightColour", 1.0f, 1.0f, 1.0f, 1.0f);
             lightShader->SetUnifromMat4("model", lightModel);
@@ -373,7 +373,29 @@ int main(void)
 
             if (CollisionDetection(playerTransform, glm::vec3(1.0f), platformPos, platformSize, 0.5f))
             {
-                std::cout << "collision" << std::endl;
+                //we want to find the point of collision and its axis relation to the collided object
+
+                glm::vec3 aToB = platformPos - playerTransform;
+                float xSqr = aToB.x * aToB.x;
+                float ySqr = aToB.y * aToB.y;
+                float zSqr = aToB.z * aToB.z;
+
+                float sqrtAtoB = glm::sqrt(xSqr + ySqr + zSqr);
+
+                glm::vec3 lengthAtoB = playerTransform + glm::vec3(sqrtAtoB);
+
+
+                lightModel = glm::translate(lightModel, lengthAtoB);
+                lightModel = glm::scale(lightModel, glm::vec3(2.0f));
+                shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
+                shader->SetUnifromMat4("model", lightModel);
+                shader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
+                shader->SetUnifromMat4("projection", projection);
+                shader->Bind();
+                
+                renderer->DrawObject(*va, *ib);
+                
+                std::cout << "Collided" << std::endl;
             }
 
             glDepthFunc(GL_LEQUAL);
