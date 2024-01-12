@@ -34,8 +34,8 @@ float cameraOffsetY;
 float cameraOffsetZ;
 float cameraAngle;
 
-int windowHeight = 1920;
-int windowWidth = 1080;
+int windowHeight = 640;
+int windowWidth = 480;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
 static bool isGameStarted;
@@ -144,18 +144,22 @@ void ImGuiRun(ImGuiIO& io)
 
 bool CollisionDetection(glm::vec3 positionOne, glm::vec3 sizeOne, glm::vec3 positionTwo, glm::vec3 sizeTwo, float collisionOffset)
 {
-    //bool collisionX = positionOne.x
 
-    bool collisionX = positionOne.x + (sizeOne.x / 2.0f) + collisionOffset >= positionTwo.x &&
-        positionTwo.x + (sizeTwo.x / 2.0f) + collisionOffset >= positionOne.x;
+    //bool collisionX = positionOne.x + (sizeOne.x / 2.0f) + collisionOffset >= positionTwo.x &&
+    //    positionTwo.x + (sizeTwo.x / 2.0f) + collisionOffset >= positionOne.x;
 
-    bool collisionY = positionOne.y + (sizeOne.y / 2.0f) + collisionOffset >= positionTwo.y &&
-        positionTwo.y + (sizeTwo.y / 2.0f) + collisionOffset >= positionOne.y;
+    //bool collisionY = positionOne.y + (sizeOne.y / 2.0f) + collisionOffset >= positionTwo.y &&
+    //    positionTwo.y + (sizeTwo.y / 2.0f) + collisionOffset >= positionOne.y;
 
-    bool collisionZ = positionOne.z + (sizeOne.z / 2.0f) + collisionOffset >= positionTwo.z &&
-        positionTwo.z + (sizeTwo.z / 2.0f) + collisionOffset >= positionOne.z;
+    //bool collisionZ = positionOne.z + (sizeOne.z / 2.0f) + collisionOffset >= positionTwo.z &&
+    //    positionTwo.z + (sizeTwo.z / 2.0f) + collisionOffset >= positionOne.z;
 
-    return collisionX && collisionY && collisionZ;
+    // create a range of position points from one end of the axis to the other end
+    // detect if players position conflicts on any axis
+    // detect specific entry point of object
+
+
+    return false;
 }
 
 int main(void)
@@ -283,44 +287,42 @@ int main(void)
 
             if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
             {
-                playerTransform.z += 20.0f * deltaTime;
+                playerTransform.z += 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
             {
-                playerTransform.z -= 20.0f * deltaTime;
+                playerTransform.z -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
             {
-                playerTransform.x -= 20.0f * deltaTime;
+                playerTransform.x -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
             {
-                playerTransform.x += 20.0f * deltaTime;
+                playerTransform.x += 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             {
-                playerTransform.y -= 2.0f * deltaTime;
+                playerTransform.y -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
             {
-                playerTransform.y += 2.0f * deltaTime;
+                playerTransform.y += 15.0f * deltaTime;
 
             }
 
             
-
-            
-                   
+   
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
 
