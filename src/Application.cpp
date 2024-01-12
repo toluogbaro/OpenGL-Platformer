@@ -145,21 +145,17 @@ void ImGuiRun(ImGuiIO& io)
 bool CollisionDetection(glm::vec3 positionOne, glm::vec3 sizeOne, glm::vec3 positionTwo, glm::vec3 sizeTwo, float collisionOffset)
 {
 
-    //bool collisionX = positionOne.x + (sizeOne.x / 2.0f) + collisionOffset >= positionTwo.x &&
-    //    positionTwo.x + (sizeTwo.x / 2.0f) + collisionOffset >= positionOne.x;
+    bool collisionX = positionOne.x - (sizeOne.x / 2.0f) <= positionTwo.x + (sizeTwo.x / 2.0f) &&
+        positionOne.x + (sizeOne.x / 2.0f) >= positionTwo.x - (sizeTwo.x / 2.0f);
+   
+    bool collisionY = positionOne.y - (sizeOne.y / 2.0f) <= positionTwo.y + (sizeTwo.y / 2.0f) && 
+        positionOne.y + (sizeOne.y / 2.0f) >= positionTwo.y - (sizeTwo.y / 2.0f);
 
-    //bool collisionY = positionOne.y + (sizeOne.y / 2.0f) + collisionOffset >= positionTwo.y &&
-    //    positionTwo.y + (sizeTwo.y / 2.0f) + collisionOffset >= positionOne.y;
+    bool collisionZ = positionOne.z - (sizeOne.z / 2.0f) <= positionTwo.z + (sizeTwo.z / 2.0f) &&
+        positionOne.z + (sizeOne.z / 2.0f) >= positionTwo.z - (sizeTwo.z / 2.0f);
+    
 
-    //bool collisionZ = positionOne.z + (sizeOne.z / 2.0f) + collisionOffset >= positionTwo.z &&
-    //    positionTwo.z + (sizeTwo.z / 2.0f) + collisionOffset >= positionOne.z;
-
-    // create a range of position points from one end of the axis to the other end
-    // detect if players position conflicts on any axis
-    // detect specific entry point of object
-
-
-    return false;
+    return collisionX && collisionY && collisionZ;
 }
 
 int main(void)
