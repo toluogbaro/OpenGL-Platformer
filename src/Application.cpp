@@ -29,28 +29,56 @@
 
 
 float deltaTime;
-float cameraOffsetX;
-float cameraOffsetY;
-float cameraOffsetZ;
+float cameraOffsetY = 4.6f;
+float cameraOffsetZ = -8.5f;
 float cameraAngle;
 
-int windowHeight = 640;
-int windowWidth = 480;
+int windowHeight = 1920;
+int windowWidth = 1080;
 
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
 static bool isGameStarted;
-static bool isColliding;
+static bool isGrounded;
+static bool isJumping;
 
 World gameWorld;
+
+float playerRotX;
+float playerRotY;
 
 
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
 {
+    cameraObj->ProcessMouseInput(currentWindow, xPos, yPos, windowHeight, windowWidth);
 
-   if(cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM) cameraObj->ProcessMouseInput(currentWindow, xPos, yPos, windowHeight, windowWidth);
-   //mouse callback calls this function when mouse input is detected
-   //Movement and rotation control
+    float lastMouseX = 0;
+    float lastMouseY = 0;
+
+   
+    float xOffset = xPos - lastMouseX;
+    float yOffset = lastMouseY - yPos;
+
+
+    //current mouse input vs the last mouse input
+
+    lastMouseX = xPos;
+    lastMouseY = yPos;
+
+    //setting the last mouse positions to the current ones
+
+    xOffset *= 0.1f;
+    yOffset *= 0.1f;
+
+    //multiplying offset by a sensitivity value, for ex. 0.5f, dampens it
+
+    playerRotX += xOffset;
+    playerRotY += yOffset;
+
+    // adding the current mouse position - the last mouse position gives you where the mouse is currently meant
+    // to be in terms of these euler angles
+
+    yOffset = glm::clamp(yOffset, -89.0f, 89.0f);
 
 }
 
@@ -63,7 +91,14 @@ void scroll_callback(GLFWwindow* currentWindow, double xOffset, double yOffset)
 
 void key_callback(GLFWwindow* currentWindow, int key, int scancode, int action, int mods)
 {
-    std::cout << "Key: " << glfwGetKeyName(key, 0) << " is pressed." << std::endl;
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+        isJumping = true;
+    }
+    else
+    {
+        isJumping = false;
+    }
 }
 
 void ProcessInput(GLFWwindow* currentWindow)
@@ -78,12 +113,14 @@ void ProcessInput(GLFWwindow* currentWindow)
 
     }
 
+    cameraObj->ProcessKeyInput(currentWindow, deltaTime);
+
+    glfwSetCursorPosCallback(currentWindow, mouse_callback);
+    glfwSetScrollCallback(currentWindow, scroll_callback);
+
     if (cameraObj->GetCameraMode() == Camera_Mode::FREE_ROAM)
     {
-        cameraObj->ProcessKeyInput(currentWindow, deltaTime);
-
-        glfwSetCursorPosCallback(currentWindow, mouse_callback);
-        glfwSetScrollCallback(currentWindow, scroll_callback);
+        
     }
     
 
@@ -114,9 +151,7 @@ void ImGuiRun(ImGuiIO& io)
 
         ImGui::Begin("Hello, world!");
 
-        ImGui::SliderFloat("Offset X", &cameraOffsetX, -5.0f, 5.0f);
-        ImGui::SliderFloat("Offset Y", &cameraOffsetY, -5.0f, 5.0f);
-        ImGui::SliderFloat("Offset Z", &cameraOffsetZ, -5.0f, 5.0f);
+        
 
         if (ImGui::Button("Free Roam", standardButtonSize))
         {
@@ -159,6 +194,8 @@ bool CollisionDetection(glm::vec3 positionOne, glm::vec3 sizeOne, glm::vec3 posi
 
     return collisionX && collisionY && collisionZ;
 }
+
+
 
 int main(void)
 {
@@ -219,12 +256,8 @@ int main(void)
         std::unique_ptr<IndexBuffer> skyboxIB(new IndexBuffer(meshTemplate->m_Cube_Indices, 36));
 
         std::unique_ptr<Shader> shader(new Shader("res/shaders/Basic.shader"));
-        //std::unique_ptr<Shader> skyboxShader(new Shader("res/shaders/Skybox.shader"));
+
         std::unique_ptr<Shader> lightShader(new Shader("res/shaders/light.shader"));
-
-        std::unique_ptr<Texture> skyboxTexture(new Texture("res/textures/Sunset.png", true));
-
-        skyboxTexture->Bind();
 
         std::unique_ptr<Renderer> renderer(new Renderer);
 
@@ -250,7 +283,7 @@ int main(void)
         
 
         glm::vec3 platformPos = glm::vec3(0.0f);
-        platformPos.y = playerTransform.y - 7.5f;
+        platformPos.y = playerTransform.y - 15.0f;
 
         glm::vec3 playerToPlatform = platformPos - playerTransform;
         glm::vec3 dirPlayerToPlatform = glm::normalize(playerToPlatform);
@@ -266,8 +299,9 @@ int main(void)
             renderer->Clear();
 
             ProcessInput(window);
-            //glfwSetKeyCallback(window, key_callback);
+            glfwSetKeyCallback(window, key_callback);
 
+            
            /* float x = player.get_component<Transform>().posX;
             float y = player.get_component<Transform>().posY;
             float z = player.get_component<Transform>().posZ;
@@ -317,28 +351,45 @@ int main(void)
 
             }
 
+            
+
+            if (isJumping && isGrounded)
+            {
+                float jumpDistance = playerTransform.y += glm::sqrt(2.0f * -2.0f * -9.81f);
+
+                for (int i = playerTransform.y; i < jumpDistance; i += deltaTime)
+                {
+                    playerTransform.y = i;
+                    return NULL;
+                    
+                }
+               
+            }
+
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             {
-                if (isColliding) playerTransform.y -= (normalVec.y * 5.0f) * deltaTime;
 
-                playerTransform.y -= 15.0f * deltaTime;
+                //playerTransform.y -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
             {
-                //if (isColliding) playerTransform.y += (normalVec.y * 5.0f) * deltaTime;
-                playerTransform.y += 15.0f * deltaTime;
+                //if (isGrounded) playerTransform.y -= (normalVec.y * 5.0f) * deltaTime;
+                playerTransform.y -= 15.0f * deltaTime;
 
             }
 
+            glm::vec3 eulerAngles = glm::vec3(playerRotX, playerRotY, 0.0f);
+
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
+            //model = glm::rotate(model, glm::radians(eulerAngles.y), glm::vec3(0, playerTransform.y,0));
 
             if (cameraObj->GetCameraMode() == Camera_Mode::PLAYER)
             {
                 cameraObj->PlayerCamera(playerTransform);
-                cameraObj->SetCameraOffset(cameraOffsetX, cameraOffsetY, cameraOffsetZ);
+                cameraObj->SetCameraOffset(0.0f, cameraOffsetY, cameraOffsetZ);
             }
 
             cameraObj->ProcessViewMatrix();
@@ -383,16 +434,17 @@ int main(void)
             {
                 gameWorld.Update(deltaTime);
             } 
+            
 
             playerToPlatform = platformPos - playerTransform;
             dirPlayerToPlatform = glm::normalize(playerToPlatform); 
             normalVec = playerTransform + dirPlayerToPlatform; 
 
+          
+
             if (CollisionDetection(playerTransform, glm::vec3(1.0f), platformPos, platformSize, 0.5f))
             {
-                //we want to find the point of collision and its axis relation to the collided object
-
-
+                
                 lightModel = glm::translate(lightModel, normalVec);
                 lightModel = glm::scale(lightModel, glm::vec3(1.0f));
                 shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
@@ -403,23 +455,24 @@ int main(void)
 
                 renderer->DrawObject(*va, *ib);
 
-                isColliding = true;
+                isGrounded = true;
 
                 std::cout << "Collided" << std::endl;
             }
             else
-                isColliding = false;
+                isGrounded = false;
 
+            if (!isGrounded)
+            {
+                playerTransform.y += player.get_component<Transform>().posY;
+            }
+            else
+            {
+                player.get_component<Transform>().posY = 0.0f;
+            }
+            
 
-            glDepthFunc(GL_LEQUAL);
-
-            //skyboxShader->SetUniform4f("u_Texture", 1.0f, 1.0f, 1.0f, 1.0f);
-            //skyboxShader->Bind();
-
-            //renderer->DrawObject(*va, *ib);
-
-            glDepthFunc(GL_LESS);
-
+            
 
             //run UI Window
             ImGuiRun(io);
@@ -432,8 +485,7 @@ int main(void)
 
         }
         shader->Unbind();
-       //skyboxShader->Unbind();
-        skyboxTexture->Unbind();
+
 
     }
 

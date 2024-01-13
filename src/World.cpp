@@ -84,7 +84,7 @@ void World::ProjectileMotionSystem(float dt)
 
 void World::Update(float deltaTime)
 {
-    CollisionSystem();
+    //CollisionSystem();
     GravitySystem(deltaTime);
     //ProjectileMotionSystem(deltaTime);
    

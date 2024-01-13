@@ -46,6 +46,7 @@ void Camera::ProcessMouseInput(GLFWwindow* currentWindow , double xPos, double y
         return;
     }*/
 
+   
     m_XOffset = xPos - m_LastMouseX;
     m_YOffset = m_LastMouseY - yPos;
 
