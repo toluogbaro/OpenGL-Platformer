@@ -40,6 +40,7 @@ int windowWidth = 480;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
 static bool isGameStarted;
+static bool isColliding;
 
 World gameWorld;
 
@@ -251,6 +252,9 @@ int main(void)
         glm::vec3 platformPos = glm::vec3(0.0f);
         platformPos.y = playerTransform.y - 7.5f;
 
+        glm::vec3 playerToPlatform = platformPos - playerTransform;
+        glm::vec3 dirPlayerToPlatform = glm::normalize(playerToPlatform);
+        glm::vec3 normalVec = playerTransform + dirPlayerToPlatform;
 
         while (!glfwWindowShouldClose(window))
         {
@@ -284,42 +288,50 @@ int main(void)
 
             if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
             {
+                //if (isColliding) playerTransform.z += (normalVec.z * 5.0f) * deltaTime;
+
                 playerTransform.z += 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
             {
+                //if (isColliding) playerTransform.z -= (normalVec.z * 5.0f) * deltaTime;
                 playerTransform.z -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
             {
+               
+               //if (isColliding) playerTransform.x -= (normalVec.x * 5.0f) * deltaTime;
                 playerTransform.x -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
             {
+                //if (isColliding) playerTransform.x += (normalVec.x * 5.0f) * deltaTime;
+
                 playerTransform.x += 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             {
+                if (isColliding) playerTransform.y -= (normalVec.y * 5.0f) * deltaTime;
+
                 playerTransform.y -= 15.0f * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
             {
+                //if (isColliding) playerTransform.y += (normalVec.y * 5.0f) * deltaTime;
                 playerTransform.y += 15.0f * deltaTime;
 
             }
 
-            
-   
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, playerTransform);
 
@@ -356,6 +368,7 @@ int main(void)
             renderer->DrawObject(*va, *ib);
 
             glm::mat4 lightModel = glm::mat4(1.0f);
+            lightModel = glm::translate(lightModel, glm::vec3(0.0f));
             
 
            /* lightShader->SetUniform4f("u_LightColour", 1.0f, 1.0f, 1.0f, 1.0f);
@@ -371,32 +384,32 @@ int main(void)
                 gameWorld.Update(deltaTime);
             } 
 
+            playerToPlatform = platformPos - playerTransform;
+            dirPlayerToPlatform = glm::normalize(playerToPlatform); 
+            normalVec = playerTransform + dirPlayerToPlatform; 
+
             if (CollisionDetection(playerTransform, glm::vec3(1.0f), platformPos, platformSize, 0.5f))
             {
                 //we want to find the point of collision and its axis relation to the collided object
 
-                glm::vec3 aToB = platformPos - playerTransform;
-                float xSqr = aToB.x * aToB.x;
-                float ySqr = aToB.y * aToB.y;
-                float zSqr = aToB.z * aToB.z;
 
-                float sqrtAtoB = glm::sqrt(xSqr + ySqr + zSqr);
-
-                glm::vec3 lengthAtoB = playerTransform + glm::vec3(sqrtAtoB);
-
-
-                lightModel = glm::translate(lightModel, lengthAtoB);
-                lightModel = glm::scale(lightModel, glm::vec3(2.0f));
+                lightModel = glm::translate(lightModel, normalVec);
+                lightModel = glm::scale(lightModel, glm::vec3(1.0f));
                 shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
                 shader->SetUnifromMat4("model", lightModel);
                 shader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
                 shader->SetUnifromMat4("projection", projection);
                 shader->Bind();
-                
+
                 renderer->DrawObject(*va, *ib);
-                
+
+                isColliding = true;
+
                 std::cout << "Collided" << std::endl;
             }
+            else
+                isColliding = false;
+
 
             glDepthFunc(GL_LEQUAL);
 
