@@ -7,6 +7,7 @@
 #include <sstream>
 #include <memory>
 
+
 #include "Renderer.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
@@ -27,14 +28,15 @@
 #include "Entity.h"
 
 
-
 float deltaTime;
+
+
 float cameraOffsetY = 4.6f;
 float cameraOffsetZ = -8.5f;
 float cameraAngle;
 
-int windowHeight = 1920;
-int windowWidth = 1080;
+int windowHeight = 640;
+int windowWidth = 480;
 
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f));
@@ -42,10 +44,12 @@ static bool isGameStarted;
 static bool isGrounded;
 static bool isJumping;
 
+
 World gameWorld;
 
 float playerRotX;
 float playerRotY;
+float walkSpeed = 15.0f;
 
 
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
@@ -94,11 +98,10 @@ void key_callback(GLFWwindow* currentWindow, int key, int scancode, int action, 
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         isJumping = true;
+
     }
-    else
-    {
-        isJumping = false;
-    }
+
+  
 }
 
 void ProcessInput(GLFWwindow* currentWindow)
@@ -231,7 +234,7 @@ int main(void)
     std::cout << "Current OpenGL Version is: " << GLFW_VERSION_MAJOR << "\n";
 
     {
-
+        #pragma region Construction
         std::unique_ptr<VertexArray> va(new VertexArray);
 
 
@@ -267,9 +270,6 @@ int main(void)
 
         ImGuiIO& io = ImGui::GetIO();
 
-        float oldTimeSinceStart = 0.0f;
-
-        
         Entity player = gameWorld.create_entity("player");
         player.add_component<Transform>();
         player.add_component<Gravity>();
@@ -289,12 +289,26 @@ int main(void)
         glm::vec3 dirPlayerToPlatform = glm::normalize(playerToPlatform);
         glm::vec3 normalVec = playerTransform + dirPlayerToPlatform;
 
+
+        float oldTimeSinceStart = 0.0f;
+        float timeSinceStart = 0.0f;
+        float airTime = 0.1f;
+        
+
+        float gravityVelo = 0.0f;
+        float gravityAccel = 0.0f;
+        float jumpDistance = 0.0f;
+
+#pragma endregion
+
         while (!glfwWindowShouldClose(window))
         {
             
-            float timeSinceStart = static_cast<float>(glfwGetTime());
+
+            timeSinceStart = static_cast<float>(glfwGetTime());
             deltaTime = timeSinceStart - oldTimeSinceStart;
             oldTimeSinceStart = timeSinceStart;
+
             
             renderer->Clear();
 
@@ -324,14 +338,14 @@ int main(void)
             {
                 //if (isColliding) playerTransform.z += (normalVec.z * 5.0f) * deltaTime;
 
-                playerTransform.z += 15.0f * deltaTime;
+                playerTransform.z += walkSpeed * deltaTime;
 
             }
 
             if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
             {
                 //if (isColliding) playerTransform.z -= (normalVec.z * 5.0f) * deltaTime;
-                playerTransform.z -= 15.0f * deltaTime;
+                playerTransform.z -= walkSpeed * deltaTime;
 
             }
 
@@ -339,7 +353,7 @@ int main(void)
             {
                
                //if (isColliding) playerTransform.x -= (normalVec.x * 5.0f) * deltaTime;
-                playerTransform.x -= 15.0f * deltaTime;
+                playerTransform.x -= walkSpeed * deltaTime;
 
             }
 
@@ -347,29 +361,45 @@ int main(void)
             {
                 //if (isColliding) playerTransform.x += (normalVec.x * 5.0f) * deltaTime;
 
-                playerTransform.x += 15.0f * deltaTime;
+                playerTransform.x += walkSpeed * deltaTime;
 
             }
 
-            
-
-            if (isJumping && isGrounded)
+            if (!isGrounded)
             {
-                float jumpDistance = playerTransform.y += glm::sqrt(2.0f * -2.0f * -9.81f);
+                airTime -= deltaTime;
+                walkSpeed = 2.0f;
+                
+                gravityVelo += -9.81f * deltaTime;
+                gravityAccel += gravityVelo * deltaTime;
 
-                for (int i = playerTransform.y; i < jumpDistance; i += deltaTime)
+                if (airTime <= 0)
                 {
-                    playerTransform.y = i;
-                    return NULL;
-                    
+                    playerTransform.y += gravityAccel * deltaTime;
                 }
+            }
+            else
+            {
+                airTime = 0.1f;
+                walkSpeed = 10.0f;
                
             }
 
-            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+
+
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && isGrounded)
             {
 
                 //playerTransform.y -= 15.0f * deltaTime;
+                jumpDistance = playerTransform.y + 5.0f;
+                gravityVelo = 0.0f;
+                gravityAccel = 0.0f;
+                //reset gravity values for acceleration after object has been in the air for a set amount of time
+
+                for (float i = playerTransform.y; i < jumpDistance; i += deltaTime)
+                {
+                    playerTransform.y = i;
+                }
 
             }
 
@@ -420,15 +450,7 @@ int main(void)
 
             glm::mat4 lightModel = glm::mat4(1.0f);
             lightModel = glm::translate(lightModel, glm::vec3(0.0f));
-            
 
-           /* lightShader->SetUniform4f("u_LightColour", 1.0f, 1.0f, 1.0f, 1.0f);
-            lightShader->SetUnifromMat4("model", lightModel);
-            lightShader->SetUnifromMat4("view", cameraObj->ProcessViewMatrix());
-            lightShader->SetUnifromMat4("projection", projection);
-            lightShader->Bind();*/
-            
-            //renderer->DrawObject(*va, *ib);
 
             if (isGameStarted)
             {
@@ -439,8 +461,6 @@ int main(void)
             playerToPlatform = platformPos - playerTransform;
             dirPlayerToPlatform = glm::normalize(playerToPlatform); 
             normalVec = playerTransform + dirPlayerToPlatform; 
-
-          
 
             if (CollisionDetection(playerTransform, glm::vec3(1.0f), platformPos, platformSize, 0.5f))
             {
@@ -457,24 +477,13 @@ int main(void)
 
                 isGrounded = true;
 
-                std::cout << "Collided" << std::endl;
+               // std::cout << "Collided" << std::endl;
             }
             else
                 isGrounded = false;
 
-            if (!isGrounded)
-            {
-                playerTransform.y += player.get_component<Transform>().posY;
-            }
-            else
-            {
-                player.get_component<Transform>().posY = 0.0f;
-            }
-            
 
-            
-
-            //run UI Window
+            /* run UI Window */
             ImGuiRun(io);
            
             /* Swap front and back buffers */
@@ -482,14 +491,9 @@ int main(void)
 
             /* Poll for and process events */
             glfwPollEvents();
-
         }
         shader->Unbind();
-
-
     }
-
-   
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
     return 0;
