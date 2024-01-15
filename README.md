@@ -17,6 +17,9 @@ To play around with the project in its current form requires downloading the sol
 
 In the solution properties general configurations first set the C++ Language Standard to C++17.
 
+Download glew from https://glew.sourceforge.net/ , click on the Win32 and 64 bit file. Once downloaded, copy the 
+bin and lib files into the Dependencies\glew folder to be linked.
+
 In C/C++ General Additional Include Directories:
 
 $(SolutionDir)Dependencies\glfw\include
@@ -39,8 +42,6 @@ opengl32.lib
 User32.lib
 Gdi32.lib
 Shell32.lib
-
-Then to wrap it up, add the bin and include files from glew into the glew folder to link glew32s.lib
 
 and finally make sure the project is configured for ALL CONFIGURATIONS and set the platform to Windows32
 

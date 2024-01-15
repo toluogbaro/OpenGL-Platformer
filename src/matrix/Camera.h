@@ -1,3 +1,6 @@
+//Credit to https://learnopengl.com/ and Joey De Vries for the camera class
+//Built off of Tutorial: https://learnopengl.com/Getting-started/Camera
+
 #pragma once
 
 #include "GLFW/glfw3.h"

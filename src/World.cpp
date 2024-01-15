@@ -1,3 +1,6 @@
+//Credit to https://youtube.com/@danielblagy for the Entity Component System Tutorial
+//Followed Tutorial: https://youtu.be/8LbVpkEqKuY?feature=shared
+
 #include "World.h"
 #include <GLFW/glfw3.h>
 #include "Entity.h"

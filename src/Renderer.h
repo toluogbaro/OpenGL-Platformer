@@ -1,3 +1,6 @@
+//Credit to https://www.youtube.com/@TheCherno
+//Followed Tutorial: https://youtu.be/bTHqmzjm2UI?feature=shared
+
 #include <GL/glew.h>
 #include <iostream>
 

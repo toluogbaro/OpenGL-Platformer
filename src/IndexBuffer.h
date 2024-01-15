@@ -1,6 +1,7 @@
 #pragma once
 
-
+//Credit to https://www.youtube.com/@TheCherno
+//Followed Tutorial: https://youtu.be/MXNMC1YAxVQ?feature=shared
 
 class IndexBuffer
 {

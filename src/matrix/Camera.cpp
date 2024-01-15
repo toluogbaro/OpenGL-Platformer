@@ -1,7 +1,7 @@
+//Credit to https://learnopengl.com/ and Joey De Vries for the camera class
+//Followed Tutorial: https://learnopengl.com/Getting-started/Camera
+
 #include "Camera.h"
-
-
-
 
 Camera::~Camera()
 {

@@ -1,3 +1,5 @@
+//Credit to https://www.youtube.com/@TheCherno
+//Followed Tutorial: https://youtu.be/bTHqmzjm2UI?feature=shared
 #pragma once
 
 #include "GL/glew.h"

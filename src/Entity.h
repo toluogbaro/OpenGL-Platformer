@@ -1,5 +1,8 @@
 #pragma once
 
+//Credit to https://youtube.com/@danielblagy for the Entity Component System Tutorial
+//Followed Tutorial: https://youtu.be/8LbVpkEqKuY?feature=shared
+
 #include "entt/entt.hpp"
 #include "World.h"
 
