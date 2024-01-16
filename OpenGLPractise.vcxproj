@@ -176,8 +176,8 @@
     <None Include="res\shaders\Skybox.shader" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Entity.h" />
     <ClInclude Include="src\Component.h" />
+    <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\MeshTemplate.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\matrix\Camera.h" />
