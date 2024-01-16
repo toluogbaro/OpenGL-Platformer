@@ -56,13 +56,12 @@ float cameraOffsetY = 4.6f; //Y offset behind player in player camera mode
 float cameraOffsetZ = -8.5f; //Z offset behind player in player camera mode
 float cameraAngle;
 
-int windowHeight = 1920;
-int windowWidth = 1080;
-
+int windowHeight = 640;
+int windowWidth = 480;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f)); //initialise camera with FOV
 
-static bool isPlayerAlive = true;
+static bool isPlayerDead;
 static bool isGrounded;
 static bool isShooting;
 static bool isAIActive;
@@ -226,7 +225,7 @@ void ImGuiRun(ImGuiIO& io)
             cameraObj->ChangeCameraMode(Camera_Mode::PLAYER);
         }
 
-
+        
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
@@ -371,6 +370,7 @@ int main(void)
         float currentBulletPoz = originalBulletPos.z;
         glm::vec3 bulletSize = glm::vec3(0.2f);
 
+        glm::vec3 originalAIPosition = glm::vec3(0, -8.6f, 10.0f);
         glm::vec3 aiPosition = glm::vec3(0, -8.6f, 10.0f);
         glm::vec3 aiSize = glm::vec3(1.0f);
         float wanderTimer = 0.0f;
@@ -527,7 +527,7 @@ int main(void)
 
             //updating the shader with the defined MVP values
 
-            if (isPlayerAlive)
+            if (!isPlayerDead)
             {
                 renderer->DrawObject(*va, *ib);
             }
@@ -535,7 +535,7 @@ int main(void)
 
             glm::mat4 platformModel = glm::mat4(1.0f);
             platformModel = glm::translate(platformModel, platformPos);
-            glm::vec3 platformSize = glm::vec3(24.0f, 12.0f, 36.0f);
+            glm::vec3 platformSize = glm::vec3(26.0f, 12.0f, 38.0f);
             platformModel = glm::scale(platformModel, platformSize);
 
             shader->SetUniform4f("u_Colour", 0.0f, 0.6f, 0.8f, 1.0f);
@@ -573,7 +573,7 @@ int main(void)
             {
                 std::random_device rd;
                 std::mt19937 gen(rd());
-                std::uniform_int_distribution<> distr(-30, 30);
+                std::uniform_int_distribution<> distr(-10, 10);
                 
                 glm::vec3 oldAIPos = glm::vec3(0.0f);
 
@@ -589,16 +589,21 @@ int main(void)
 
                 case WANDER:
                     wanderTimer -= deltaTime;
-                    glm::vec3 maxDist = glm::vec3(0.0f);
+                    glm::vec3 calculatedDist = glm::vec3(0.0f);
 
                     if(PositiveOrNegative)
-                        maxDist =  glm::vec3(oldAIPos.x + randDistX, 0, oldAIPos.z - randDistZ);
+                        calculatedDist =  glm::vec3(oldAIPos.x + randDistX, 0, oldAIPos.z - randDistZ);
                     else
-                        maxDist = glm::vec3(oldAIPos.x - randDistX, 0, oldAIPos.z + randDistZ);
+                        calculatedDist = glm::vec3(oldAIPos.x - randDistX, 0, oldAIPos.z + randDistZ);
 
-                    glm::vec3 dirToMaxDist = glm::normalize(maxDist);
+                    glm::vec3 dirToCalculatedDist = glm::normalize(calculatedDist);
 
-                    aiPosition += dirToMaxDist * 3.5f * deltaTime;
+                    aiPosition.x = glm::clamp(aiPosition.x, -10.0f, 10.0f);
+                    aiPosition.z = glm::clamp(aiPosition.z, -30.0f, 16.0f);
+
+                    aiPosition += dirToCalculatedDist * 5.0f * deltaTime;
+
+                    std::cout << aiPosition.x << " " << aiPosition.z << std::endl;
 
                     break;
 
@@ -607,16 +612,17 @@ int main(void)
                     glm::vec3 aiToPlayer = playerTransform - aiPosition;
                     glm::vec3 dirAItoPlayer = glm::normalize(aiToPlayer);
                     
-                    std::cout << isPlayerAlive << std::endl;
+                    
 
                     if (aiPosition != playerTransform )
                     {
                         aiPosition += dirAItoPlayer * 6.0f * deltaTime;
                        
                     }
-                    else
+
+                    if (DistanceCheck(aiPosition, playerTransform, 0.5f))
                     {
-                        isPlayerAlive = false;
+                        isPlayerDead = true;
                     }
                     break;
 
@@ -686,12 +692,12 @@ int main(void)
             if (CollisionDetection(playerTransform, glm::vec3(1.0f), platformPos, platformSize))
             {
                 
-                lightModel = glm::translate(lightModel, normalVec);
-                lightModel = glm::scale(lightModel, glm::vec3(1.0f));
-                shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
-                shader->SetUnifromMat4("model", lightModel);
+                //lightModel = glm::translate(lightModel, normalVec);
+                //lightModel = glm::scale(lightModel, glm::vec3(1.0f));
+                //shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
+                //shader->SetUnifromMat4("model", lightModel);
 
-                renderer->DrawObject(*va, *ib);
+                //renderer->DrawObject(*va, *ib);
 
                 //rendering a bright object for debugging purposes
 
