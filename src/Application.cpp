@@ -11,9 +11,7 @@
 //
 //Collision System Built Upon AABB Tutorial From https://learnopengl.com/ 
 //Followed Tutorial: https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
-//
-//Credit to https://youtube.com/@danielblagy for the Entity Component System Tutorial
-//Followed Tutorial: https://youtu.be/8LbVpkEqKuY?feature=shared
+//s
 
 //All classes appropriately credited within them
 
@@ -56,8 +54,8 @@ float cameraOffsetY = 4.6f; //Y offset behind player in player camera mode
 float cameraOffsetZ = -8.5f; //Z offset behind player in player camera mode
 float cameraAngle;
 
-int windowHeight = 640;
-int windowWidth = 480;
+int windowHeight = 1920;
+int windowWidth = 1080;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f)); //initialise camera with FOV
 
@@ -66,13 +64,14 @@ static bool isGrounded;
 static bool isShooting;
 static bool isAIActive;
 static bool isWandering;
+static bool isLineOfSight;
 
 
 float walkSpeed = 10.0f; //player walkspeed stored as global to change when player is jumping
 float maxJumpHeight;
 
 enum PlayerState { NEUTRAL, JUMPING, RUNNING};
-enum AIStates {VERIFICATION, WANDER, ATTACK, DEATH };
+enum AIStates { VERIFICATION, WANDER, ATTACK, DEATH};
 PlayerState currentPlayerState;
 AIStates currentAIState;
 
@@ -121,6 +120,8 @@ const char* to_string(AIStates ai)
     case  AIStates::DEATH:
         return "Death";
         break;
+
+    
 
     default:
         return "None";
@@ -215,6 +216,11 @@ void ImGuiRun(ImGuiIO& io)
             currentAIState = VERIFICATION;
         }
 
+        if (ImGui::Button("Activate LineOfSight", standardButtonSize) && isAIActive)
+        {
+            isLineOfSight = true;
+        }
+
         if (ImGui::Button("Free Roam", standardButtonSize))
         {
             cameraObj->ChangeCameraMode(Camera_Mode::FREE_ROAM);
@@ -272,6 +278,25 @@ bool DistanceCheck(glm::vec3 positionOne, glm::vec3 positionTwo, float distanceT
     bool detection = distanceSquared <= distanceThreshold ? true : false;
 
     return detection;
+}
+
+bool LineOfSight(glm::vec3 playerPos,  glm::vec3 enemyPos, float viewThreshold)
+{
+    
+    glm::vec3 enemyToPlayerDir = glm::normalize(playerPos - enemyPos);
+    //get direction to player from enemy
+
+    glm::vec3 enemyLookDir = glm::normalize(glm::vec3(0, 0, -enemyPos.z));
+
+    float dotX = enemyToPlayerDir.x * enemyLookDir.x;
+    float dotY = enemyToPlayerDir.y * enemyLookDir.y;
+    float dotZ = enemyToPlayerDir.z * enemyLookDir.z;
+
+    float dotEnemyandPlayer = dotX + dotY + dotZ;
+
+    bool isLooking = dotEnemyandPlayer >= viewThreshold;
+
+    return isLooking;
 }
 
 
@@ -393,7 +418,7 @@ int main(void)
             ProcessInput(window);
             glfwSetKeyCallback(window, key_callback);
 
-            #pragma region Movement and Gravity
+#pragma region Movement and Gravity
 
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && isGrounded)
             {
@@ -500,7 +525,7 @@ int main(void)
             }
 
 
-            #pragma region Matrices
+#pragma region Matrices
 
           
             glm::mat4 model = glm::mat4(1.0f);
@@ -567,7 +592,7 @@ int main(void)
             }
 
 
-          
+#pragma region Dynamic AI
 
             if (isAIActive)
             {
@@ -602,8 +627,6 @@ int main(void)
                     aiPosition.z = glm::clamp(aiPosition.z, -30.0f, 16.0f);
 
                     aiPosition += dirToCalculatedDist * 5.0f * deltaTime;
-
-                    std::cout << aiPosition.x << " " << aiPosition.z << std::endl;
 
                     break;
 
@@ -648,19 +671,52 @@ int main(void)
                 renderer->DrawObject(*va, *ib);
 
                 glm::mat4 aiDetectionGizmo = glm::mat4(1.0f);
-                aiDetectionGizmo = glm::translate(aiDetectionGizmo, glm::vec3(aiPosition.x, aiPosition.y + 2.5f, aiPosition.z));
-                aiDetectionGizmo = glm::scale(aiDetectionGizmo, glm::vec3(12.0f, 5.0f, 12.0f));
-                shader->SetUniform4f("u_Colour", 1.0f, 0.0f, 0.0f, 1.0f);
-                shader->SetUnifromMat4("model", aiDetectionGizmo);
+               
 
-                if (DistanceCheck(playerTransform, aiPosition, 7.5f))
+                if (DistanceCheck(aiPosition, bulletPosition, 0.5f))
                 {
-                    shader->SetUniform4f("u_Colour", 0.0f, 1.0f, 0.0f, 1.0f);
-                    currentAIState = ATTACK;
+                    currentAIState = DEATH;
+                    isAIActive = false;
                 }
-                else if (!DistanceCheck(playerTransform, aiPosition, 7.5f) && currentAIState != WANDER)
+
+                if (!isLineOfSight)
+
                 {
-                    currentAIState = VERIFICATION;
+                    aiDetectionGizmo = glm::translate(aiDetectionGizmo, glm::vec3(aiPosition.x, aiPosition.y + 2.5f, aiPosition.z));
+                    aiDetectionGizmo = glm::scale(aiDetectionGizmo, glm::vec3(12.0f, 5.0f, 12.0f));
+                    shader->SetUniform4f("u_Colour", 1.0f, 0.0f, 0.0f, 1.0f);
+                    shader->SetUnifromMat4("model", aiDetectionGizmo);
+
+                    if (DistanceCheck(playerTransform, aiPosition, 7.5f))
+                    {
+                        shader->SetUniform4f("u_Colour", 0.0f, 1.0f, 0.0f, 1.0f);
+                        currentAIState = ATTACK;
+                    }
+                    else if (!DistanceCheck(playerTransform, aiPosition, 7.5f) && currentAIState != WANDER)
+                    {
+                        currentAIState = VERIFICATION;
+                    }
+
+                   
+ 
+                }
+                else
+                {
+                    glm::vec3 enemyToPlayer = glm::normalize(playerTransform - aiPosition);
+                    aiDetectionGizmo = glm::translate(aiDetectionGizmo, aiPosition + enemyToPlayer);
+                    aiDetectionGizmo = glm::scale(aiDetectionGizmo, glm::vec3(2.0f, 1.0f, 2.0f));
+                    shader->SetUniform4f("u_Colour", 1.0f, 0.0f, 0.0f, 1.0f);
+                    shader->SetUnifromMat4("model", aiDetectionGizmo);
+
+                    if (LineOfSight(playerTransform, aiPosition, 0.0f))
+                    {
+                        shader->SetUniform4f("u_Colour", 0.0f, 1.0f, 0.0f, 1.0f);
+                        currentAIState = ATTACK;
+                    }
+                    else if (!LineOfSight(playerTransform, aiPosition, 0.0f) && currentAIState != WANDER)
+                    {
+                        currentAIState = VERIFICATION;
+                    }
                 }
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -668,12 +724,9 @@ int main(void)
                 renderer->DrawObject(*va, *ib);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+               
 
-                if (DistanceCheck(aiPosition, bulletPosition, 0.5f))
-                {
-                    currentAIState = DEATH;
-                    isAIActive = false;
-                }
+#pragma endregion
                 
             }
 
