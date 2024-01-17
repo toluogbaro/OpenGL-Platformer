@@ -55,8 +55,8 @@ float cameraOffsetY = 4.6f; //Y offset behind player in player camera mode
 float cameraOffsetZ = -8.5f; //Z offset behind player in player camera mode
 float cameraAngle;
 
-int windowHeight = 1080;
-int windowWidth = 720;
+int windowHeight = 1920;
+int windowWidth = 1080;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f)); //initialise camera with FOV
 
