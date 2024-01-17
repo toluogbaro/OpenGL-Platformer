@@ -658,8 +658,7 @@ int main(void)
 
                     glm::vec3 aiToPlayer = playerTransform - aiPosition;
                     glm::vec3 dirAItoPlayer = glm::normalize(aiToPlayer);
-                    
-                    
+                                      
 
                     if (aiPosition != playerTransform )
                     {
@@ -770,10 +769,10 @@ int main(void)
 
                     if (LineOfSight(playerTransform, aiPosition, 0.0f))
                     {
-                        shader->SetUniform4f("u_Colour", 0.0f, 1.0f, 0.0f, 1.0f);
+                        shader->SetUniform4f("u_Colour", 0.0f, 1.0f, 0.1f, 1.0f);
                         currentAIState = ATTACK;
                     }
-                    else if (!LineOfSight(playerTransform, aiPosition, 0.0f) && currentAIState != WANDER)
+                    else if (!LineOfSight(playerTransform, aiPosition, 0.1f) && currentAIState != WANDER)
                     {
                         currentAIState = VERIFICATION;
                     }
