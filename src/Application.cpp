@@ -646,7 +646,7 @@ int main(void)
                     glm::vec3 dirToCalculatedDist = glm::normalize(calculatedDist);
 
                     aiPosition.x = glm::clamp(aiPosition.x, -10.0f, 10.0f);
-                    aiPosition.z = glm::clamp(aiPosition.z, -30.0f, 16.0f);
+                    aiPosition.z = glm::clamp(aiPosition.z, -15.0f, 15.0f);
 
                     aiPosition += dirToCalculatedDist * 5.0f * deltaTime;
 
@@ -745,7 +745,7 @@ int main(void)
                 {
 
                     glm::mat4 lineOfSightGizmo = glm::mat4(1.0f);
-                    lineOfSightGizmo = glm::translate(lineOfSightGizmo, glm::vec3(aiPosition.x, aiPosition.y + 1.5f, aiPosition.z + 2.0f));
+                    lineOfSightGizmo = glm::translate(lineOfSightGizmo, glm::vec3(aiPosition.x, aiPosition.y + 1.5f, aiPosition.z - 2.1f));
                     lineOfSightGizmo = glm::scale(lineOfSightGizmo, glm::vec3(3.0f));
                     shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
                     shader->SetUnifromMat4("model", lineOfSightGizmo);
