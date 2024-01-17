@@ -15,7 +15,7 @@
 
 //All classes appropriately credited within them
 
-
+#pragma region Includes
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <vector>
@@ -46,16 +46,17 @@
 
 #include "World.h"
 #include "Entity.h"
+#pragma endregion
 
-
+#pragma region Global Variables
 float deltaTime; //time between the current frame and last frame
 
 float cameraOffsetY = 4.6f; //Y offset behind player in player camera mode
 float cameraOffsetZ = -8.5f; //Z offset behind player in player camera mode
 float cameraAngle;
 
-int windowHeight = 1920;
-int windowWidth = 1080;
+int windowHeight = 1080;
+int windowWidth = 720;
 
 std::unique_ptr<Camera> cameraObj(new Camera(50.0f, 45.0f)); //initialise camera with FOV
 
@@ -74,6 +75,8 @@ enum PlayerState { NEUTRAL, JUMPING, RUNNING};
 enum AIStates { VERIFICATION, WANDER, ATTACK, DEATH};
 PlayerState currentPlayerState;
 AIStates currentAIState;
+
+#pragma endregion
 
 //convert enum to string for use in imgui debugging
 const char* to_string(PlayerState p)
@@ -101,6 +104,7 @@ const char* to_string(PlayerState p)
     //credit to: https://mariusbancila.ro/blog/2023/08/17/how-to-convert-an-enum-to-string-in-cpp/
 }
 
+//convert enum to string for use in imgui debugging
 const char* to_string(AIStates ai)
 {
     switch (ai)
@@ -132,6 +136,7 @@ const char* to_string(AIStates ai)
     //credit to: https://mariusbancila.ro/blog/2023/08/17/how-to-convert-an-enum-to-string-in-cpp/
 }
 
+#pragma region GLFW Functions
 void mouse_callback(GLFWwindow* currentWindow, double xPos, double yPos) 
 {
     cameraObj->ProcessMouseInput(currentWindow, xPos, yPos, windowHeight, windowWidth);
@@ -179,7 +184,9 @@ void ProcessInput(GLFWwindow* currentWindow)
     
 
 }
+#pragma endregion
 
+#pragma region ImGui
 //Initialise UI
 void ImGuiInitialize(GLFWwindow* window)
 {
@@ -241,6 +248,9 @@ void ImGuiRun(ImGuiIO& io)
     ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
 }
+#pragma endregion
+
+#pragma region Extra Functions
 
 //Function takes in two objects position and size and uses AABB method to detect collisiion
 bool CollisionDetection(glm::vec3 positionOne, glm::vec3 sizeOne, glm::vec3 positionTwo, glm::vec3 sizeTwo)
@@ -286,7 +296,7 @@ bool LineOfSight(glm::vec3 playerPos,  glm::vec3 enemyPos, float viewThreshold)
     glm::vec3 enemyToPlayerDir = glm::normalize(playerPos - enemyPos);
     //get direction to player from enemy
 
-    glm::vec3 enemyLookDir = glm::normalize(glm::vec3(0, 0, -enemyPos.z));
+    glm::vec3 enemyLookDir = glm::normalize(glm::vec3(0, 0, enemyPos.z));
 
     float dotX = enemyToPlayerDir.x * enemyLookDir.x;
     float dotY = enemyToPlayerDir.y * enemyLookDir.y;
@@ -298,13 +308,13 @@ bool LineOfSight(glm::vec3 playerPos,  glm::vec3 enemyPos, float viewThreshold)
 
     return isLooking;
 }
-
+#pragma endregion
 
 
 int main(void)
 {
 
-    #pragma region Initialisation
+#pragma region Initialisation
 
     GLFWwindow* window;
 
@@ -342,7 +352,8 @@ int main(void)
 #pragma endregion
 
     {
-        #pragma region Construction
+
+#pragma region Variables
 
         std::unique_ptr<VertexArray> va(new VertexArray);
 
@@ -360,7 +371,7 @@ int main(void)
 
         std::unique_ptr<Shader> shader(new Shader("res/shaders/Basic.shader"));
 
-        std::unique_ptr<Shader> lightShader(new Shader("res/shaders/light.shader"));
+        std::unique_ptr<Shader> collisionShader(new Shader("res/shaders/light.shader"));
 
         std::unique_ptr<Renderer> renderer(new Renderer);
 
@@ -384,24 +395,26 @@ int main(void)
 
         float oldTimeSinceStart = 0.0f; //last frame
         float timeSinceStart = 0.0f; //current frame
-        float airTime = 0.1f;//how long the player stays in the air
+        float airTime = 0.1f; //how long the player stays in the air before gravity activates
         
         float gravityVelo = 0.0f; //gravity velocity
         float gravityAccel = 0.0f; //gravity acceleration
-        float jumpPower = 3.5f;
+        float jumpPower = 3.5f; //forms the maximum distance the player can jump
 
         glm::vec3 originalBulletPos = glm::vec3(0.0f);
         glm::vec3 bulletPosition = glm::vec3(0.0f);
         float currentBulletPoz = originalBulletPos.z;
         glm::vec3 bulletSize = glm::vec3(0.2f);
 
-        glm::vec3 originalAIPosition = glm::vec3(0, -8.6f, 10.0f);
+        glm::vec3 originalAIPosition = glm::vec3(0, -8.6f, 10.0f); //storing ai position
         glm::vec3 aiPosition = glm::vec3(0, -8.6f, 10.0f);
         glm::vec3 aiSize = glm::vec3(1.0f);
-        float wanderTimer = 0.0f;
+        float wanderTimer = 0.0f; //the enemy will wander everytime this timer reaches a certain number
         int randDistX = 0;
         int randDistZ = 0;
         bool PositiveOrNegative = false;
+
+        glm::vec3 aiDetectionGizmoTransform = glm::vec3(0.0f);
 
 #pragma endregion
 
@@ -524,6 +537,8 @@ int main(void)
                 isShooting = false;
             }
 
+            //shooting based on hold
+
 
 #pragma region Matrices
 
@@ -584,13 +599,18 @@ int main(void)
 
                 renderer->DrawObject(*va, *ib);
 
+                //move the bullet on the z but keep the x and y axis locked
+
             }
             else
             {
                 originalBulletPos = glm::vec3(playerTransform.x, playerTransform.y, playerTransform.z + 0.6f);
                 currentBulletPoz = originalBulletPos.z;
+
+                //reset the bullet position back to the player
             }
 
+#pragma endregion
 
 #pragma region Dynamic AI
 
@@ -605,15 +625,15 @@ int main(void)
                 switch (currentAIState)
                 {
                 case VERIFICATION:
-                    wanderTimer += deltaTime;
-                    oldAIPos = glm::vec3(aiPosition.x, aiPosition.y, aiPosition.z);
-                    randDistX = distr(gen);
-                    randDistZ = distr(gen);
-                    PositiveOrNegative = (rand() % 100) < 50;
+                    wanderTimer += deltaTime; //goes up before wandering to give a buffer of time before it stops
+                    oldAIPos = glm::vec3(aiPosition.x, aiPosition.y, aiPosition.z); //update ai position
+                    randDistX = distr(gen); //random number between -10 and 10
+                    randDistZ = distr(gen); //random number between -10 and 10
+                    PositiveOrNegative = (rand() % 100) < 50; //is true if the random number is above 50 percent of 100
                     break;
 
                 case WANDER:
-                    wanderTimer -= deltaTime;
+                    wanderTimer -= deltaTime;//goes down while wandering to give a buffer of time before it stops
                     glm::vec3 calculatedDist = glm::vec3(0.0f);
 
                     if(PositiveOrNegative)
@@ -621,12 +641,16 @@ int main(void)
                     else
                         calculatedDist = glm::vec3(oldAIPos.x - randDistX, 0, oldAIPos.z + randDistZ);
 
+                    //PositiveOrNegative switches up the axis on a coinflip to make the enenmy movement feel less robotic
+
                     glm::vec3 dirToCalculatedDist = glm::normalize(calculatedDist);
 
                     aiPosition.x = glm::clamp(aiPosition.x, -10.0f, 10.0f);
                     aiPosition.z = glm::clamp(aiPosition.z, -30.0f, 16.0f);
 
                     aiPosition += dirToCalculatedDist * 5.0f * deltaTime;
+
+                    //move the enemy to a point along the direction of the calculated distance within a clamped zone
 
                     break;
 
@@ -640,12 +664,16 @@ int main(void)
                     if (aiPosition != playerTransform )
                     {
                         aiPosition += dirAItoPlayer * 6.0f * deltaTime;
+
+                        //ai will go towards player in attack mode while their positions are not the same
                        
                     }
 
                     if (DistanceCheck(aiPosition, playerTransform, 0.5f))
                     {
                         isPlayerDead = true;
+
+                        //stop player rendering if the enemy reaches within a 0.5 radius of the player
                     }
                     break;
 
@@ -655,11 +683,15 @@ int main(void)
                 {
                     currentAIState = VERIFICATION;
 
+                   
+
                 }
                 else if(wanderTimer > 1.0f)
                 {
                     currentAIState = WANDER;
                 }
+
+                //switching between verification and wander based on time
 
 
                 glm::mat4 aiModel = glm::mat4(1.0f);
@@ -677,12 +709,16 @@ int main(void)
                 {
                     currentAIState = DEATH;
                     isAIActive = false;
+
+                    //if enemy is shot, stop their rendering
                 }
 
                 if (!isLineOfSight)
 
                 {
-                    aiDetectionGizmo = glm::translate(aiDetectionGizmo, glm::vec3(aiPosition.x, aiPosition.y + 2.5f, aiPosition.z));
+                    
+                    aiDetectionGizmoTransform = glm::vec3(aiPosition.x, aiPosition.y + 2.5f, aiPosition.z);
+                    aiDetectionGizmo = glm::translate(aiDetectionGizmo,aiDetectionGizmoTransform);
                     aiDetectionGizmo = glm::scale(aiDetectionGizmo, glm::vec3(12.0f, 5.0f, 12.0f));
                     shader->SetUniform4f("u_Colour", 1.0f, 0.0f, 0.0f, 1.0f);
                     shader->SetUnifromMat4("model", aiDetectionGizmo);
@@ -691,20 +727,44 @@ int main(void)
                     {
                         shader->SetUniform4f("u_Colour", 0.0f, 1.0f, 0.0f, 1.0f);
                         currentAIState = ATTACK;
+
+                        //gizmos turns green if the player is within the enemys radius +  attack mode
                     }
                     else if (!DistanceCheck(playerTransform, aiPosition, 7.5f) && currentAIState != WANDER)
                     {
                         currentAIState = VERIFICATION;
+
+                        //reset if the player leaves the radius
                     }
+
+                    //distance check mode
 
                    
  
                 }
                 else
                 {
+
+                    glm::mat4 lineOfSightGizmo = glm::mat4(1.0f);
+                    lineOfSightGizmo = glm::translate(lineOfSightGizmo, glm::vec3(aiPosition.x, aiPosition.y + 1.5f, aiPosition.z + 2.0f));
+                    lineOfSightGizmo = glm::scale(lineOfSightGizmo, glm::vec3(3.0f));
+                    shader->SetUniform4f("u_Colour", 1.0f, 1.0f, 1.0f, 1.0f);
+                    shader->SetUnifromMat4("model", lineOfSightGizmo);
+
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+                    renderer->DrawObject(*va, *ib);
+
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+                    //cube in front of the enemy to represent their view angle 
+
+                   
                     glm::vec3 enemyToPlayer = glm::normalize(playerTransform - aiPosition);
-                    aiDetectionGizmo = glm::translate(aiDetectionGizmo, aiPosition + enemyToPlayer);
-                    aiDetectionGizmo = glm::scale(aiDetectionGizmo, glm::vec3(2.0f, 1.0f, 2.0f));
+
+                    aiDetectionGizmoTransform = aiPosition + enemyToPlayer;
+                    aiDetectionGizmo = glm::translate(aiDetectionGizmo, aiDetectionGizmoTransform);
+                    aiDetectionGizmo = glm::scale(aiDetectionGizmo, glm::vec3(1.0f, 1.0f, 1.0f));
                     shader->SetUniform4f("u_Colour", 1.0f, 0.0f, 0.0f, 1.0f);
                     shader->SetUnifromMat4("model", aiDetectionGizmo);
 
@@ -717,6 +777,10 @@ int main(void)
                     {
                         currentAIState = VERIFICATION;
                     }
+
+                    //gizmos direction towards the player to represent how dot product is working
+
+                  
                 }
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -724,13 +788,13 @@ int main(void)
                 renderer->DrawObject(*va, *ib);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+                //render gizmos in either mode
                
 
 #pragma endregion
                 
             }
-
-#pragma endregion
 
             glm::mat4 lightModel = glm::mat4(1.0f);
             lightModel = glm::translate(lightModel, glm::vec3(0.0f));
